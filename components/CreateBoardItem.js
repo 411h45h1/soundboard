@@ -1,21 +1,25 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Platform, StyleSheet, TouchableOpacity } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
+import AppContext from "../core/context/appContext";
 
 const CreateBoardItem = () => {
-  const PickImage = async () => {
+  const state = useContext(AppContext);
+  const { updateSoundBoard } = state;
+
+  const PickAudio = async () => {
     await DocumentPicker.getDocumentAsync({
       type: "audio/mpeg",
     }).then(({ type, name, uri }) => {
       if (type === "success") {
-        //  const jsonValue = JSON.stringify({ type, name, uri });
-        //  await AsyncStorage.setItem("@storage_Key", jsonValue);
+        return updateSoundBoard({ name, uri });
       }
     });
   };
+
   return (
-    <TouchableOpacity style={styles.cont} onPress={() => PickImage()}>
+    <TouchableOpacity style={styles.cont} onPress={() => PickAudio()}>
       <AntDesign name="addfile" size={20} />
     </TouchableOpacity>
   );
@@ -25,7 +29,8 @@ export default CreateBoardItem;
 
 const styles = StyleSheet.create({
   cont: {
-    border: "3px solid black",
+    borderWidth: 3,
+    borderColor: "black",
     height: 80,
     width: 100,
     borderRadius: 10,

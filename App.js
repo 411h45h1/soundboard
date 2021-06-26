@@ -1,8 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import BoardItem from "./components/BoardItem";
-import CreateBoardItem from "./components/CreateBoardItem";
+import Board from "./components/Board";
 import AppState from "./core/context/AppState";
 
 export default function App() {
@@ -15,10 +14,7 @@ export default function App() {
             <Text style={styles.titleText}>SoundBoard</Text>
           </View>
 
-          <View style={styles.boardArea}>
-            <BoardItem />
-            <CreateBoardItem />
-          </View>
+          <Board />
         </View>
       </View>
     </AppState>
@@ -36,10 +32,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    margin: "10px",
+    marginVertical: 25,
+    marginHorizontal: 10,
     backgroundColor: "#DBAD6A",
     borderRadius: 10,
-    padding: "10px",
+    padding: 10,
   },
 
   title: {
@@ -53,15 +50,5 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: "bold",
     color: "white",
-  },
-
-  boardArea: {
-    flex: 5,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    border: "2px solid black",
-    width: "100%",
-    borderRadius: 10,
-    padding: "10px",
   },
 });

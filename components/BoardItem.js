@@ -102,16 +102,17 @@ export default class BoardItem extends Component {
   };
 
   render() {
+    const { name } = this.props;
     return (
       <TouchableOpacity style={styles.cont} onPress={this.handlePlayPause}>
         {this.state.isPlaying ? (
-          <FontAwesome name="pause" size={20} style={styles.playerButton} />
+          <Ionicons name="pause" size={20} style={styles.playerButton} />
         ) : (
           <Ionicons name="ios-play" size={20} style={styles.playerButton} />
         )}
 
-        <Text>Title: </Text>
-        <Text>Key Logged: </Text>
+        <Text>Title: {name} </Text>
+        {/* <Text>Key Logged: </Text> */}
       </TouchableOpacity>
     );
   }
@@ -119,7 +120,8 @@ export default class BoardItem extends Component {
 
 const styles = StyleSheet.create({
   cont: {
-    border: "3px solid black",
+    borderWidth: 3,
+    borderColor: "black",
     height: 80,
     marginRight: 10,
     width: 100,
