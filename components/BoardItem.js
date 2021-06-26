@@ -143,7 +143,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
     height: 80,
     minWidth: 100,
-    maxWidth: 220,
+    maxWidth: 200,
+    alignItems: "center",
+    justifyContent: "center",
   },
   soundButton: {
     padding: 2,
