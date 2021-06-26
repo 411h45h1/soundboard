@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import BoardItem from "./components/BoardItem";
+import CreateBoardItem from "./components/CreateBoardItem";
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
 
         <View style={styles.boardArea}>
           <BoardItem />
-          <BoardItem />
+          <CreateBoardItem />
         </View>
       </View>
     </View>

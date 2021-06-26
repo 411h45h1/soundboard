@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 
 export default class BoardItem extends Component {
@@ -105,10 +105,12 @@ export default class BoardItem extends Component {
     return (
       <TouchableOpacity style={styles.cont} onPress={this.handlePlayPause}>
         {this.state.isPlaying ? (
-          <FontAwesome name="pause-circle" size={20} />
+          <FontAwesome name="pause" size={20} style={styles.playerButton} />
         ) : (
-          <FontAwesome name="play-circle" size={20} />
+          <Ionicons name="ios-play" size={20} style={styles.playerButton} />
         )}
+
+        <Text>Title: </Text>
         <Text>Key Logged: </Text>
       </TouchableOpacity>
     );
@@ -117,12 +119,16 @@ export default class BoardItem extends Component {
 
 const styles = StyleSheet.create({
   cont: {
-    border: "2px solid black",
-    margin: 10,
+    border: "3px solid black",
     height: 80,
+    marginRight: 10,
     width: 100,
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+  },
+
+  playerButton: {
+    alignSelf: "flex-end",
   },
 });
