@@ -1,9 +1,11 @@
 import React, { Component } from "react";
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
+import AppContext from "../core/context/appContext";
 
 export default class BoardItem extends Component {
+  static contextType = AppContext;
   _isMounted = false;
 
   constructor(props) {
@@ -13,6 +15,7 @@ export default class BoardItem extends Component {
       playbackInstance: null,
       volume: 1.0,
       isBuffering: true,
+      showDelete: false,
     };
     this.playbackInstance = new Audio.Sound();
   }
@@ -102,32 +105,58 @@ export default class BoardItem extends Component {
   };
 
   render() {
-    const { name } = this.props;
+    const { showDelete } = this.state;
+    const { id, name } = this.props;
+    const { removeBookmarkOnPost } = this.context;
     return (
-      <TouchableOpacity style={styles.cont} onPress={this.handlePlayPause}>
-        {this.state.isPlaying ? (
-          <Ionicons name="pause" size={20} style={styles.playerButton} />
-        ) : (
-          <Ionicons name="ios-play" size={20} style={styles.playerButton} />
-        )}
+      <View style={styles.cont}>
+        {showDelete ? (
+          <TouchableOpacity
+            style={styles.delete}
+            onPress={() => removeBookmarkOnPost(id)}
+          >
+            <Text style={{ color: "white" }}>Delete</Text>
+          </TouchableOpacity>
+        ) : null}
 
-        <Text>Title: {name} </Text>
-        {/* <Text>Key Logged: </Text> */}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.soundButton}
+          onPress={this.handlePlayPause}
+          onLongPress={() => this.setState({ showDelete: !showDelete })}
+        >
+          {this.state.isPlaying ? (
+            <Ionicons name="pause" size={20} style={styles.playerButton} />
+          ) : (
+            <Ionicons name="ios-play" size={20} style={styles.playerButton} />
+          )}
+
+          <Text>Title: {name} </Text>
+          {/* <Text>Key Logged: </Text> */}
+        </TouchableOpacity>
+      </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
   cont: {
+    marginRight: 10,
+    height: 80,
+    width: 100,
+  },
+  soundButton: {
     borderWidth: 3,
     borderColor: "black",
-    height: 80,
-    marginRight: 10,
-    width: 100,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "flex-start",
+  },
+
+  delete: {
+    backgroundColor: "tomato",
+    borderRadius: 5,
+    marginBottom: 5,
+    alignItems: "center",
   },
 
   playerButton: {

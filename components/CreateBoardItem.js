@@ -13,7 +13,8 @@ const CreateBoardItem = () => {
       type: "audio/mpeg",
     }).then(({ type, name, uri }) => {
       if (type === "success") {
-        return updateSoundBoard({ name, uri });
+        const id = Date.now() + Math.floor(Math.random() * 9000) + 1000;
+        return updateSoundBoard({ sid: id, name, uri });
       }
     });
   };

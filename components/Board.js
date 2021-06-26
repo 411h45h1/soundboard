@@ -12,7 +12,7 @@ const Board = () => {
       <ScrollView contentContainerStyle={styles.scroll}>
         {soundBoard &&
           soundBoard.map((i, k) => (
-            <BoardItem key={k} src={i.uri} name={i.name} />
+            <BoardItem key={k} id={i.id} src={i.uri} name={i.name} />
           ))}
         <CreateBoardItem />
       </ScrollView>

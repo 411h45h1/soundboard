@@ -68,11 +68,38 @@ const AppState = (props) => {
     }
   };
 
+  const removeBookmarkOnPost = async (id) => {
+    const deleteBookmark = async () =>
+      await AsyncStorage.getItem("soundboard").then(async (res) => {
+        res = res == null ? [] : JSON.parse(res);
+        res.splice(
+          res.findIndex((i) => i.id === id),
+          1
+        );
+        return await AsyncStorage.setItem(
+          "soundboard",
+          JSON.stringify(res)
+        ).then(() =>
+          dispatch({
+            type: "UPDATE_SOUNDBOARD",
+            payload: res,
+          })
+        );
+      });
+
+    try {
+      deleteBookmark();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
         soundBoard: state.soundBoard,
         updateSoundBoard,
+        removeBookmarkOnPost,
       }}
     >
       {props.children}
