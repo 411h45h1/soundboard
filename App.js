@@ -3,22 +3,25 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import BoardItem from "./components/BoardItem";
 import CreateBoardItem from "./components/CreateBoardItem";
+import AppState from "./core/context/AppState";
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <View style={styles.board}>
-        <StatusBar style="auto" />
-        <View style={styles.title}>
-          <Text style={styles.titleText}>SoundBoard</Text>
-        </View>
+    <AppState>
+      <View style={styles.container}>
+        <View style={styles.board}>
+          <StatusBar style="auto" />
+          <View style={styles.title}>
+            <Text style={styles.titleText}>SoundBoard</Text>
+          </View>
 
-        <View style={styles.boardArea}>
-          <BoardItem />
-          <CreateBoardItem />
+          <View style={styles.boardArea}>
+            <BoardItem />
+            <CreateBoardItem />
+          </View>
         </View>
       </View>
-    </View>
+    </AppState>
   );
 }
 
