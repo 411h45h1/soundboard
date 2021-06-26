@@ -24,12 +24,11 @@ export default Board;
 
 const styles = StyleSheet.create({
   boardArea: {
-    flex: 5,
-
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: "black",
-    width: "100%",
     borderRadius: 10,
+    flex: 8,
+    width: "100%",
     padding: 10,
   },
 

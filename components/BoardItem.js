@@ -142,9 +142,11 @@ const styles = StyleSheet.create({
   cont: {
     marginRight: 10,
     height: 80,
-    width: 100,
+    minWidth: 100,
+    maxWidth: 220,
   },
   soundButton: {
+    padding: 2,
     borderWidth: 3,
     borderColor: "black",
     borderRadius: 10,

@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    flex: 1,
+    flex: 2,
     alignItems: "flex-start",
     justifyContent: "flex-start",
     width: "100%",
