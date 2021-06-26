@@ -1,5 +1,6 @@
 //context
-import React, { useReducer } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useReducer } from "react";
 import AppContext from "./appContext";
 import appReducer from "./appReducer";
 
@@ -9,6 +10,26 @@ const AppState = (props) => {
   };
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { soundBoard } = state;
+
+  useEffect(() => {
+    getSoundBoard();
+  }, []);
+
+  const getSoundBoard = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("soundboard");
+
+      jsonValue !== []
+        ? dispatch({
+            type: "UPDATE_SOUNDBOARD",
+            payload: JSON.parse(jsonValue),
+          })
+        : [];
+    } catch (e) {
+      // error reading value
+      console.log(e);
+    }
+  };
 
   const updateSoundBoard = (soundObj) => {
     const storeData = async (value) => {
