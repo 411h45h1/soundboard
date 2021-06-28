@@ -1,13 +1,22 @@
 import React, { useContext } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import AppContext from "../core/context/appContext";
 import BoardItem from "./BoardItem";
 import CreateBoardItem from "./CreateBoardItem";
 import { StatusBar } from "expo-status-bar";
+import { AdMobBanner } from "expo-ads-admob";
+
+// ios Banner: ca-app-pub-6764675123042611/6264350124
+// Android Banner: ca-app-pub-6764675123042611/3720827706
 
 const Board = ({ navigation }) => {
   const state = useContext(AppContext);
   const { soundBoard } = state;
+  const bannerAdId =
+    Platform.OS === "ios"
+      ? "ca-app-pub-6764675123042611/6264350124"
+      : "ca-app-pub-6764675123042611/3720827706";
+
   return (
     <View style={styles.board}>
       <StatusBar style="auto" />
@@ -30,6 +39,20 @@ const Board = ({ navigation }) => {
             ))}
         </ScrollView>
       </View>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#fff",
+        }}
+      >
+        <AdMobBanner
+          bannerSize="banner"
+          adUnitID={bannerAdId}
+          servePersonalizedAds={false}
+        />
+      </View>
     </View>
   );
 };
@@ -44,6 +67,7 @@ const styles = StyleSheet.create({
     flex: 8,
     width: "100%",
     padding: 10,
+    marginBottom: 10,
   },
 
   scroll: {
@@ -58,7 +82,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 40,
-    marginBottom: 30,
+    marginBottom: 20,
     marginHorizontal: 10,
     backgroundColor: "#DBAD6A",
     borderRadius: 10,
