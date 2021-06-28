@@ -42,6 +42,7 @@ const Board = ({ navigation }) => {
       <View
         style={{
           flex: 1,
+          width: "100%",
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: "#fff",

@@ -166,9 +166,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
     marginVertical: 15,
+    width: "40%",
   },
 
   soundButton: {
+    width: "100%",
     minWidth: 100,
     padding: 2,
     borderWidth: 2,
@@ -181,7 +183,8 @@ const styles = StyleSheet.create({
 
   modArea: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
+    width: "100%",
   },
 
   delete: {
