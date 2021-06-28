@@ -106,17 +106,32 @@ export default class BoardItem extends Component {
 
   render() {
     const { showDelete } = this.state;
-    const { id, name } = this.props;
-    const { removeBookmarkOnPost } = this.context;
+    const { sid, name, title, navigation } = this.props;
+    const { removeSoundboardItem } = this.context;
     return (
       <View style={styles.cont}>
         {showDelete ? (
-          <TouchableOpacity
-            style={styles.delete}
-            onPress={() => removeBookmarkOnPost(id)}
-          >
-            <Text style={{ color: "white" }}>Delete</Text>
-          </TouchableOpacity>
+          <View style={styles.modArea}>
+            <TouchableOpacity
+              style={styles.edit}
+              // onPress={() => removeSoundboardItem(id)}
+              onPress={() =>
+                navigation.navigate("Edit", {
+                  sid,
+                  fileName: name,
+                  title,
+                })
+              }
+            >
+              <Text style={styles.buttonText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.delete}
+              onPress={() => removeSoundboardItem(sid)}
+            >
+              <Text style={styles.buttonText}>Delete?</Text>
+            </TouchableOpacity>
+          </View>
         ) : null}
 
         <TouchableOpacity
@@ -129,9 +144,11 @@ export default class BoardItem extends Component {
           ) : (
             <Ionicons name="ios-play" size={20} style={styles.playerButton} />
           )}
-
-          <Text>Title: {name} </Text>
-          {/* <Text>Key Logged: </Text> */}
+          {title ? (
+            <Text style={styles.buttonText}>{title} </Text>
+          ) : (
+            <Text style={styles.buttonText}>File: {name}</Text>
+          )}
         </TouchableOpacity>
       </View>
     );
@@ -139,25 +156,47 @@ export default class BoardItem extends Component {
 }
 
 const styles = StyleSheet.create({
+  buttonText: {
+    fontWeight: "bold",
+    fontSize: 17,
+    color: "white",
+  },
   cont: {
-    marginRight: 10,
-    height: 80,
-    minWidth: 100,
-    maxWidth: 200,
     alignItems: "center",
     justifyContent: "center",
+    alignSelf: "center",
+    marginVertical: 15,
   },
+
   soundButton: {
+    minWidth: 100,
     padding: 2,
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: "black",
+    backgroundColor: "#646F4B",
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "flex-start",
   },
 
+  modArea: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+  },
+
   delete: {
+    margin: 2,
+    padding: 5,
     backgroundColor: "tomato",
+    borderRadius: 5,
+    marginBottom: 5,
+    alignItems: "center",
+  },
+
+  edit: {
+    margin: 2,
+    padding: 5,
+    backgroundColor: "#646F4B",
     borderRadius: 5,
     marginBottom: 5,
     alignItems: "center",

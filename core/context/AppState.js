@@ -68,12 +68,12 @@ const AppState = (props) => {
     }
   };
 
-  const removeBookmarkOnPost = async (id) => {
-    const deleteBookmark = async () =>
+  const removeSoundboardItem = async (sid) => {
+    const deleteSoundboardItem = async () =>
       await AsyncStorage.getItem("soundboard").then(async (res) => {
         res = res == null ? [] : JSON.parse(res);
         res.splice(
-          res.findIndex((i) => i.id === id),
+          res.findIndex((i) => i.sid === sid),
           1
         );
         return await AsyncStorage.setItem(
@@ -88,7 +88,33 @@ const AppState = (props) => {
       });
 
     try {
-      deleteBookmark();
+      deleteSoundboardItem();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const updateBoardItem = async (sid, title) => {
+    const update = async () =>
+      await AsyncStorage.getItem("soundboard").then(async (res) => {
+        res = res == null ? [] : JSON.parse(res);
+        const objIndex = res.findIndex((o) => o.sid === sid);
+        console.log(objIndex, res);
+        res[objIndex].title = title;
+
+        return await AsyncStorage.setItem(
+          "soundboard",
+          JSON.stringify(res)
+        ).then(() =>
+          dispatch({
+            type: "UPDATE_SOUNDBOARD",
+            payload: res,
+          })
+        );
+      });
+
+    try {
+      update();
     } catch (e) {
       console.log(e);
     }
@@ -99,7 +125,8 @@ const AppState = (props) => {
       value={{
         soundBoard: state.soundBoard,
         updateSoundBoard,
-        removeBookmarkOnPost,
+        updateBoardItem,
+        removeSoundboardItem,
       }}
     >
       {props.children}

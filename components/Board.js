@@ -1,21 +1,35 @@
 import React, { useContext } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import AppContext from "../core/context/appContext";
 import BoardItem from "./BoardItem";
 import CreateBoardItem from "./CreateBoardItem";
+import { StatusBar } from "expo-status-bar";
 
-const Board = () => {
+const Board = ({ navigation }) => {
   const state = useContext(AppContext);
   const { soundBoard } = state;
   return (
-    <View style={styles.boardArea}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {soundBoard &&
-          soundBoard.map((i, k) => (
-            <BoardItem key={k} id={i.id} src={i.uri} name={i.name} />
-          ))}
+    <View style={styles.board}>
+      <StatusBar style="auto" />
+      <View style={styles.title}>
+        <Text style={styles.titleText}>SoundBoard</Text>
+      </View>
+      <View style={styles.boardArea}>
         <CreateBoardItem />
-      </ScrollView>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          {soundBoard &&
+            soundBoard.map((i, k) => (
+              <BoardItem
+                key={k}
+                navigation={navigation}
+                sid={i.sid && i.sid}
+                src={i.uri && i.uri}
+                name={i.name && i.name}
+                title={i.title && i.title}
+              />
+            ))}
+        </ScrollView>
+      </View>
     </View>
   );
 };
@@ -35,6 +49,32 @@ const styles = StyleSheet.create({
   scroll: {
     flexDirection: "row",
     flexWrap: "wrap",
-    height: "100%",
+    justifyContent: "space-evenly",
+  },
+
+  board: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 40,
+    marginBottom: 30,
+    marginHorizontal: 10,
+    backgroundColor: "#DBAD6A",
+    borderRadius: 10,
+    padding: 10,
+  },
+
+  title: {
+    flex: 1,
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    width: "100%",
+  },
+
+  titleText: {
+    fontSize: 40,
+    fontWeight: "bold",
+    color: "white",
   },
 });

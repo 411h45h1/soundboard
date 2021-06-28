@@ -2,22 +2,27 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Board from "./components/Board";
+import EditBoard from "./components/EditBoard";
+
 import AppState from "./core/context/AppState";
+
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+
+const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <AppState>
-      <View style={styles.container}>
-        <View style={styles.board}>
-          <StatusBar style="auto" />
-          <View style={styles.title}>
-            <Text style={styles.titleText}>SoundBoard</Text>
-          </View>
-
-          <Board />
+    <NavigationContainer>
+      <AppState>
+        <View style={styles.container}>
+          <Stack.Navigator headerMode="none" initialRouteName="Home">
+            <Stack.Screen name="Home" component={Board} />
+            <Stack.Screen name="Edit" component={EditBoard} />
+          </Stack.Navigator>
         </View>
-      </View>
-    </AppState>
+      </AppState>
+    </NavigationContainer>
   );
 }
 
@@ -25,30 +30,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#96897B",
-  },
-
-  board: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 25,
-    marginHorizontal: 10,
-    backgroundColor: "#DBAD6A",
-    borderRadius: 10,
-    padding: 10,
-  },
-
-  title: {
-    flex: 2,
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-    width: "100%",
-  },
-
-  titleText: {
-    fontSize: 40,
-    fontWeight: "bold",
-    color: "white",
   },
 });
