@@ -109,6 +109,11 @@ export default class BoardItem extends Component {
     const { showDelete } = this.state;
     const { sid, name, title, navigation } = this.props;
     const { removeSoundboardItem } = this.context;
+
+    if (showDelete) {
+      setTimeout(() => this.setState({ showDelete: !showDelete }), 3000);
+    }
+
     return (
       <View style={styles.cont}>
         {showDelete ? (
