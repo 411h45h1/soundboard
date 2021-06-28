@@ -39,7 +39,7 @@ const Board = ({ navigation }) => {
             ))}
         </ScrollView>
       </View>
-      <View
+      {/* <View
         style={{
           flex: 1,
           width: "100%",
@@ -53,7 +53,7 @@ const Board = ({ navigation }) => {
           adUnitID={bannerAdId}
           servePersonalizedAds={false}
         />
-      </View>
+      </View> */}
     </View>
   );
 };
