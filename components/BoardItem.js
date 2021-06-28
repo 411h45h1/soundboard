@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import AppContext from "../core/context/appContext";
+import { normalize } from "../core/responsive";
 
 export default class BoardItem extends Component {
   static contextType = AppContext;
@@ -140,9 +141,17 @@ export default class BoardItem extends Component {
           onLongPress={() => this.setState({ showDelete: !showDelete })}
         >
           {this.state.isPlaying ? (
-            <Ionicons name="pause" size={20} style={styles.playerButton} />
+            <Ionicons
+              name="pause"
+              size={normalize(14)}
+              style={styles.playerButton}
+            />
           ) : (
-            <Ionicons name="ios-play" size={20} style={styles.playerButton} />
+            <Ionicons
+              name="ios-play"
+              size={normalize(14)}
+              style={styles.playerButton}
+            />
           )}
           {title ? (
             <Text style={styles.buttonText}>{title} </Text>
@@ -158,7 +167,7 @@ export default class BoardItem extends Component {
 const styles = StyleSheet.create({
   buttonText: {
     fontWeight: "bold",
-    fontSize: 17,
+    fontSize: normalize(12),
     color: "white",
   },
   cont: {

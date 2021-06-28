@@ -5,6 +5,7 @@ import BoardItem from "./BoardItem";
 import CreateBoardItem from "./CreateBoardItem";
 import { StatusBar } from "expo-status-bar";
 import { AdMobBanner } from "expo-ads-admob";
+import { font, normalize } from "../core/responsive";
 
 // ios Banner: ca-app-pub-6764675123042611/6264350124
 // Android Banner: ca-app-pub-6764675123042611/3720827706
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
   },
 
   titleText: {
-    fontSize: 40,
+    fontSize: normalize(35),
     fontWeight: "bold",
     color: "white",
   },

@@ -3,6 +3,7 @@ import { Platform, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import AppContext from "../core/context/appContext";
+import { normalize } from "../core/responsive";
 
 const CreateBoardItem = () => {
   const state = useContext(AppContext);
@@ -21,8 +22,12 @@ const CreateBoardItem = () => {
 
   return (
     <TouchableOpacity style={styles.cont} onPress={() => PickAudio()}>
-      <AntDesign color="white" name="addfile" size={20} />
-      <Text style={{ color: "white", fontWeight: "bold" }}>Add Sound</Text>
+      <AntDesign color="white" name="addfile" size={normalize(17)} />
+      <Text
+        style={{ color: "white", fontWeight: "bold", fontSize: normalize(13) }}
+      >
+        Add Sound
+      </Text>
     </TouchableOpacity>
   );
 };

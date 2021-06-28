@@ -13,6 +13,7 @@ import AppContext from "../core/context/appContext";
 import BoardItem from "./BoardItem";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { normalize } from "../core/responsive";
 
 const EditBoard = ({ navigation, route }) => {
   const state = useContext(AppContext);
@@ -34,7 +35,7 @@ const EditBoard = ({ navigation, route }) => {
               // onPress={() => removeSoundboardItem(id)}
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name="md-return-up-back" size={20} />
+              <Ionicons name="md-return-up-back" size={normalize(14)} />
             </TouchableOpacity>
           </View>
 
@@ -44,7 +45,7 @@ const EditBoard = ({ navigation, route }) => {
               width: "80%",
               justifyContent: "space-between",
               alignSelf: "center",
-              height: 30,
+
               alignItems: "center",
             }}
           >
@@ -58,7 +59,6 @@ const EditBoard = ({ navigation, route }) => {
               width: "80%",
               justifyContent: "space-between",
               alignSelf: "center",
-              height: 30,
               alignItems: "center",
             }}
           >
@@ -77,7 +77,7 @@ const EditBoard = ({ navigation, route }) => {
               width: "80%",
               justifyContent: "center",
               alignSelf: "center",
-              height: 50,
+              margin: 20,
               alignItems: "center",
             }}
           >
@@ -101,13 +101,14 @@ export default EditBoard;
 const styles = StyleSheet.create({
   text: {
     fontWeight: "bold",
-    fontSize: 15,
+    fontSize: normalize(15),
   },
   input: {
     backgroundColor: "white",
     width: "50%",
     height: "100%",
     borderRadius: 5,
+    fontSize: normalize(12),
   },
   submit: {
     justifyContent: "center",
@@ -160,7 +161,7 @@ const styles = StyleSheet.create({
   },
 
   titleText: {
-    fontSize: 40,
+    fontSize: normalize(35),
     fontWeight: "bold",
     color: "white",
   },
