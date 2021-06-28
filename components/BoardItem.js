@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
     marginVertical: 15,
-    width: "40%",
+    width: normalize(90),
   },
 
   soundButton: {
