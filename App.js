@@ -6,14 +6,21 @@ import EditBoard from "./components/EditBoard";
 
 import AppState from "./core/context/AppState";
 
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
 const Stack = createStackNavigator();
+const MyTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: "#97897B",
+  },
+};
 
 export default function App() {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={MyTheme}>
       <AppState>
         <View style={styles.container}>
           <Stack.Navigator headerMode="none" initialRouteName="Home">

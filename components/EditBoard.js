@@ -10,7 +10,6 @@ import {
   View,
 } from "react-native";
 import AppContext from "../core/context/appContext";
-import BoardItem from "./BoardItem";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { normalize } from "../core/responsive";

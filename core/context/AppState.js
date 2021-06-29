@@ -25,7 +25,7 @@ const AppState = (props) => {
   const { soundBoard } = state;
 
   useEffect(() => {
-    if (!__DEV__) {
+    if (__DEV__ === false) {
       updateCheck();
     }
 
@@ -116,7 +116,6 @@ const AppState = (props) => {
       await AsyncStorage.getItem("soundboard").then(async (res) => {
         res = res == null ? [] : JSON.parse(res);
         const objIndex = res.findIndex((o) => o.sid === sid);
-        console.log(objIndex, res);
         res[objIndex].title = title;
 
         return await AsyncStorage.setItem(
