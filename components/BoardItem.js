@@ -96,7 +96,9 @@ export default class BoardItem extends Component {
     if (this._isMounted) {
       const { isPlaying } = this.state;
       isPlaying
-        ? await this.playbackInstance.pauseAsync()
+        ? await this.playbackInstance
+            .stopAsync()
+            .then(() => this.playbackInstance.playAsync())
         : await this.playbackInstance.playAsync();
 
       return this.setState({
