@@ -1,195 +1,83 @@
-import React, { Component } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import AppContext from "../core/context/appContext";
 import { normalize } from "../core/responsive";
 
-export default class BoardItem extends Component {
-  static contextType = AppContext;
-  _isMounted = false;
+const BoardItem = ({ sid, name, title, navigation, src }) => {
+  const context = useContext(AppContext);
+  const { removeSoundboardItem } = context;
+  const [sound, setSound] = useState();
+  const [showDelete, setShowDelete] = useState(false);
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      isPlaying: false,
-      playbackInstance: null,
-      volume: 1.0,
-      isBuffering: true,
-      showDelete: false,
-    };
-    this.playbackInstance = new Audio.Sound();
-  }
-
-  async componentDidMount() {
-    this._isMounted = true;
-
-    if (this._isMounted) {
-      try {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-          interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-          interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-          playThroughEarpieceAndroid: false,
-          staysActiveInBackground: true,
-        });
-
-        await this.loadAudio();
-      } catch (e) {
-        console.log(e);
-      }
-    }
-  }
-
-  componentWillUnmount() {
-    this._isMounted = false;
-    this.playbackInstance.unloadAsync();
-  }
-
-  async loadAudio() {
-    if (this._isMounted) {
-      const { isPlaying, volume } = this.state;
-      const { src } = this.props;
-
-      try {
-        const source = {
-          uri: src,
-        };
-
-        const status = {
-          shouldPlay: isPlaying,
-          volume: volume,
-        };
-
-        this.playbackInstance.setOnPlaybackStatusUpdate(
-          this.onPlaybackStatusUpdate
-        );
-        await this.playbackInstance.loadAsync(source, status, false);
-      } catch (e) {
-        console.log(e);
-      }
-    }
-  }
-
-  onPlaybackStatusUpdate = async (status) => {
-    if (this._isMounted) {
-      this.setState({
-        isBuffering: status.isBuffering,
-      });
-
-      if (status.didJustFinish === true) {
-        // audio has finished!
-        this.setState({
-          isPlaying: false,
-        });
-        await this.playbackInstance.stopAsync();
-        await this.playbackInstance.unloadAsync();
-
-        await this.loadAudio();
-      }
-    }
+  const playSound = async () => {
+    const { sound } = await Audio.Sound.createAsync({ uri: src });
+    setSound(sound);
+    return await sound.playAsync();
   };
+  useEffect(() => {
+    return sound ? () => sound.unloadAsync() : undefined;
+  }, [sound]);
 
-  handlePlayPause = async () => {
-    if (this._isMounted) {
-      const { isPlaying } = this.state;
-      isPlaying
-        ? await this.playbackInstance
-            .stopAsync()
-            .then(() => this.playbackInstance.playAsync())
-        : await this.playbackInstance.playAsync();
+  return (
+    <View style={styles.cont}>
+      {showDelete ? (
+        <View style={styles.modArea}>
+          <TouchableOpacity
+            style={styles.edit}
+            onPress={() =>
+              navigation.navigate("Edit", {
+                sid,
+                fileName: name,
+                title,
+              })
+            }
+          >
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.delete}
+            onPress={() => removeSoundboardItem(sid)}
+          >
+            <Text style={styles.buttonText}>Delete?</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
-      return this.setState({
-        isPlaying: !isPlaying,
-      });
-    }
-  };
+      <TouchableOpacity
+        style={styles.soundButton}
+        onPress={playSound}
+        onLongPress={() => setShowDelete(!showDelete)}
+      >
+        {title ? (
+          <Text
+            style={{
+              fontWeight: "bold",
+              fontSize: normalize(15),
+              color: "white",
+              marginVertical: 25,
+            }}
+          >
+            {title}
+          </Text>
+        ) : (
+          <Text
+            style={{
+              fontWeight: "bold",
+              fontSize: normalize(15),
+              color: "white",
+              marginVertical: 25,
+            }}
+          >
+            File: {name}
+          </Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+};
 
-  render() {
-    const { showDelete } = this.state;
-    const { sid, name, title, navigation } = this.props;
-    const { removeSoundboardItem } = this.context;
-
-    if (showDelete) {
-      setTimeout(() => this.setState({ showDelete: !showDelete }), 3000);
-    }
-
-    return (
-      <View style={styles.cont}>
-        {showDelete ? (
-          <View style={styles.modArea}>
-            <TouchableOpacity
-              style={styles.edit}
-              // onPress={() => removeSoundboardItem(id)}
-              onPress={() =>
-                navigation.navigate("Edit", {
-                  sid,
-                  fileName: name,
-                  title,
-                })
-              }
-            >
-              <Text style={styles.buttonText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.delete}
-              onPress={() => removeSoundboardItem(sid)}
-            >
-              <Text style={styles.buttonText}>Delete?</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        <TouchableOpacity
-          style={styles.soundButton}
-          onPress={this.handlePlayPause}
-          onLongPress={() => this.setState({ showDelete: !showDelete })}
-        >
-          {this.state.isPlaying ? (
-            <Ionicons
-              name="pause"
-              size={normalize(14)}
-              style={styles.playerButton}
-            />
-          ) : (
-            <Ionicons
-              name="ios-play"
-              size={normalize(14)}
-              style={styles.playerButton}
-            />
-          )}
-          {title ? (
-            <Text
-              style={{
-                fontWeight: "bold",
-                fontSize: normalize(15),
-                color: "white",
-                marginTop: 5,
-                marginBottom: 20,
-              }}
-            >
-              {title}
-            </Text>
-          ) : (
-            <Text
-              style={{
-                fontWeight: "bold",
-                fontSize: normalize(15),
-                color: "white",
-                marginTop: 5,
-                marginBottom: 20,
-              }}
-            >
-              File: {name}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    );
-  }
-}
+export default BoardItem;
 
 const styles = StyleSheet.create({
   buttonText: {
@@ -208,7 +96,6 @@ const styles = StyleSheet.create({
 
   soundButton: {
     width: "100%",
-    height: "100%",
     minWidth: 100,
     padding: 2,
     borderWidth: 2,
