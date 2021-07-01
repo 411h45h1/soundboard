@@ -59,6 +59,7 @@ const EditBoard = ({ navigation, route }) => {
               justifyContent: "space-between",
               alignSelf: "center",
               alignItems: "center",
+              marginVertical: 15,
             }}
           >
             <Text style={styles.text}>Title</Text>
@@ -76,7 +77,6 @@ const EditBoard = ({ navigation, route }) => {
               width: "80%",
               justifyContent: "center",
               alignSelf: "center",
-              margin: 20,
               alignItems: "center",
             }}
           >

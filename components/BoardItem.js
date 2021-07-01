@@ -159,9 +159,29 @@ export default class BoardItem extends Component {
             />
           )}
           {title ? (
-            <Text style={styles.buttonText}>{title} </Text>
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: normalize(15),
+                color: "white",
+                marginTop: 5,
+                marginBottom: 20,
+              }}
+            >
+              {title}
+            </Text>
           ) : (
-            <Text style={styles.buttonText}>File: {name}</Text>
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: normalize(15),
+                color: "white",
+                marginTop: 5,
+                marginBottom: 20,
+              }}
+            >
+              File: {name}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -174,17 +194,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: normalize(12),
     color: "white",
+    marginHorizontal: 5,
   },
   cont: {
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
     marginVertical: 15,
-    width: normalize(90),
+    width: normalize(125),
   },
 
   soundButton: {
     width: "100%",
+    height: "100%",
     minWidth: 100,
     padding: 2,
     borderWidth: 2,
