@@ -19,6 +19,8 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
     return sound ? () => sound.unloadAsync() : undefined;
   }, [sound]);
 
+  if (showDelete) setTimeout(() => setShowDelete(false), 3000);
+
   return (
     <View style={styles.cont}>
       {showDelete ? (

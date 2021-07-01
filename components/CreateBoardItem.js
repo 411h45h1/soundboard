@@ -43,5 +43,6 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 5,
   },
 });
