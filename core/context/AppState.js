@@ -3,19 +3,6 @@ import AppContext from "./appContext";
 import appReducer from "./appReducer";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Updates from "expo-updates";
-
-const updateCheck = async () => {
-  await Updates.checkForUpdateAsync().then(async (update) => {
-    if (update.isAvailable) {
-      await Updates.fetchUpdateAsync().then(async (check) => {
-        if (check.isNew) {
-          await Updates.reloadAsync();
-        }
-      });
-    }
-  });
-};
 
 const AppState = (props) => {
   const initialState = {
@@ -25,10 +12,6 @@ const AppState = (props) => {
   const { soundBoard } = state;
 
   useEffect(() => {
-    if (__DEV__ === false) {
-      updateCheck();
-    }
-
     getSoundBoard();
   }, []);
 
