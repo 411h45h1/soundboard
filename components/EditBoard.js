@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import {
   Keyboard,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,9 +20,14 @@ const EditBoard = ({ navigation, route }) => {
   const { updateBoardItem } = state;
   const { fileName, title, sid } = route.params;
   const [titleText, onChangeTitleText] = useState(title ? title : "");
+  const dismissKeyboard = () => {
+    if (Platform.OS !== "web") {
+      Keyboard.dismiss();
+    }
+  };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.board}>
         <StatusBar style="auto" />
         <View style={styles.title}>
@@ -34,7 +40,7 @@ const EditBoard = ({ navigation, route }) => {
               // onPress={() => removeSoundboardItem(id)}
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name="md-return-up-back" size={normalize(14)} />
+              <Ionicons name="md-return-up-back" size={normalize(13)} />
             </TouchableOpacity>
           </View>
 
@@ -64,7 +70,7 @@ const EditBoard = ({ navigation, route }) => {
           >
             <Text style={styles.text}>Title</Text>
             <TextInput
-              ke
+              autoCompleteType="off"
               style={styles.input}
               onChangeText={onChangeTitleText}
               value={titleText}
@@ -100,7 +106,18 @@ export default EditBoard;
 const styles = StyleSheet.create({
   text: {
     fontWeight: "bold",
-    fontSize: normalize(15),
+    ...Platform.select({
+      ios: {
+        fontSize: normalize(15),
+      },
+      android: {
+        fontSize: normalize(15),
+      },
+      default: {
+        // other platforms, web for example
+        fontSize: "3vw",
+      },
+    }),
   },
   input: {
     backgroundColor: "white",
@@ -117,12 +134,23 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   goBack: {
-    maxWidth: "10%",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "white",
     padding: 5,
     borderRadius: 5,
+    ...Platform.select({
+      ios: {
+        maxWidth: "10%",
+      },
+      android: {
+        maxWidth: "10%",
+      },
+      default: {
+        // other platforms, web for example
+        maxWidth: "7%",
+      },
+    }),
   },
   boardArea: {
     borderWidth: 2,
@@ -160,7 +188,18 @@ const styles = StyleSheet.create({
   },
 
   titleText: {
-    fontSize: normalize(35),
+    ...Platform.select({
+      ios: {
+        fontSize: normalize(35),
+      },
+      android: {
+        fontSize: normalize(35),
+      },
+      default: {
+        // other platforms, web for example
+        fontSize: "4.5vw",
+      },
+    }),
     fontWeight: "bold",
     color: "white",
   },

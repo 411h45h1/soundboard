@@ -63,13 +63,28 @@ export default Board;
 
 const styles = StyleSheet.create({
   boardArea: {
-    borderWidth: 2,
-    borderColor: "black",
-    borderRadius: 10,
-    flex: 8,
     width: "100%",
     padding: 10,
     marginBottom: 10,
+
+    ...Platform.select({
+      ios: {
+        flex: 8,
+        borderWidth: 2,
+        borderColor: "black",
+        borderRadius: 10,
+      },
+      android: {
+        flex: 8,
+        borderWidth: 2,
+        borderColor: "black",
+        borderRadius: 10,
+      },
+      default: {
+        // other platforms, web for example
+        height: "85%",
+      },
+    }),
   },
 
   scroll: {
@@ -99,7 +114,18 @@ const styles = StyleSheet.create({
   },
 
   titleText: {
-    fontSize: normalize(35),
+    ...Platform.select({
+      ios: {
+        fontSize: normalize(35),
+      },
+      android: {
+        fontSize: normalize(35),
+      },
+      default: {
+        // other platforms, web for example
+        fontSize: "7vw",
+      },
+    }),
     fontWeight: "bold",
     color: "white",
   },

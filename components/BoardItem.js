@@ -1,5 +1,11 @@
 import React, { useEffect, useContext, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Audio } from "expo-av";
 import AppContext from "../core/context/appContext";
 import { normalize } from "../core/responsive";
@@ -52,27 +58,9 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
         onLongPress={() => setShowDelete(!showDelete)}
       >
         {title ? (
-          <Text
-            style={{
-              fontWeight: "bold",
-              fontSize: normalize(15),
-              color: "white",
-              marginVertical: 25,
-            }}
-          >
-            {title}
-          </Text>
+          <Text style={styles.soundBoardText}>{title}</Text>
         ) : (
-          <Text
-            style={{
-              fontWeight: "bold",
-              fontSize: normalize(15),
-              color: "white",
-              marginVertical: 25,
-            }}
-          >
-            File: {name}
-          </Text>
+          <Text style={styles.soundBoardText}>File: {name}</Text>
         )}
       </TouchableOpacity>
     </View>
@@ -84,21 +72,44 @@ export default BoardItem;
 const styles = StyleSheet.create({
   buttonText: {
     fontWeight: "bold",
-    fontSize: normalize(12),
     color: "white",
     marginHorizontal: 5,
+
+    ...Platform.select({
+      ios: {
+        fontSize: normalize(12),
+      },
+      android: {
+        fontSize: normalize(12),
+      },
+      default: {
+        // other platforms, web for example
+        fontSize: "1.6vw",
+      },
+    }),
   },
   cont: {
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
     marginVertical: 15,
-    width: normalize(125),
+
+    ...Platform.select({
+      ios: {
+        width: normalize(125),
+      },
+      android: {
+        width: normalize(125),
+      },
+      default: {
+        // other platforms, web for example
+        width: "15vw",
+        marginHorizontal: 5,
+      },
+    }),
   },
 
   soundButton: {
-    width: "100%",
-    minWidth: 100,
     padding: 2,
     borderWidth: 2,
     borderColor: "black",
@@ -106,6 +117,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "flex-start",
+  },
+
+  soundBoardText: {
+    fontWeight: "bold",
+    color: "white",
+    marginVertical: 25,
+    ...Platform.select({
+      ios: {
+        fontSize: normalize(15),
+      },
+      android: {
+        fontSize: normalize(15),
+      },
+      default: {
+        // other platforms, web for example
+        fontSize: "1.9vw",
+      },
+    }),
   },
 
   modArea: {

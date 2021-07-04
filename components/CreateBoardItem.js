@@ -22,12 +22,8 @@ const CreateBoardItem = () => {
 
   return (
     <TouchableOpacity style={styles.cont} onPress={() => PickAudio()}>
-      <AntDesign color="white" name="addfile" size={normalize(17)} />
-      <Text
-        style={{ color: "white", fontWeight: "bold", fontSize: normalize(13) }}
-      >
-        Add Sound
-      </Text>
+      <AntDesign color="white" name="addfile" style={styles.icon} />
+      <Text style={styles.text}>Add Sound</Text>
     </TouchableOpacity>
   );
 };
@@ -44,5 +40,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 5,
+  },
+  icon: {
+    ...Platform.select({
+      ios: {
+        fontSize: normalize(16),
+      },
+      android: {
+        fontSize: normalize(16),
+      },
+      default: {
+        // other platforms, web for example
+        fontSize: "3.2vw",
+      },
+    }),
+  },
+  text: {
+    color: "white",
+    fontWeight: "bold",
+    ...Platform.select({
+      ios: {
+        fontSize: normalize(13),
+      },
+      android: {
+        fontSize: normalize(13),
+      },
+      default: {
+        // other platforms, web for example
+        fontSize: "2vw",
+      },
+    }),
   },
 });
