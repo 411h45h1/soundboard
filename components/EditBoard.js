@@ -2,7 +2,6 @@ import React, { useContext, useState } from "react";
 import {
   Keyboard,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -10,91 +9,60 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import AppContext from "../core/context/appContext";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import { normalize } from "../core/responsive";
+import { AppContext } from "../core/context/AppState";
 
 const EditBoard = ({ navigation, route }) => {
-  const state = useContext(AppContext);
-  const { updateBoardItem } = state;
+  const { updateBoardItem } = useContext(AppContext);
   const { fileName, title, sid } = route.params;
-  const [titleText, onChangeTitleText] = useState(title ? title : "");
-  const dismissKeyboard = () => {
-    if (Platform.OS !== "web") {
-      Keyboard.dismiss();
+  const [titleText, setTitleText] = useState(title || "");
+
+  const handleSubmit = () => {
+    if (titleText.trim()) {
+      updateBoardItem(sid, titleText);
+      navigation.goBack();
+    } else {
+      alert("Title cannot be empty.");
     }
   };
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.board}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
         <StatusBar style="auto" />
-        <View style={styles.title}>
-          <Text style={styles.titleText}>Edit </Text>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Edit</Text>
         </View>
-        <View style={styles.boardArea}>
-          <View>
-            <TouchableOpacity
-              style={styles.goBack}
-              // onPress={() => removeSoundboardItem(id)}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="md-return-up-back" size={normalize(13)} />
-            </TouchableOpacity>
+
+        <View style={styles.content}>
+          <TouchableOpacity
+            style={styles.goBackButton}
+            onPress={navigation.goBack}
+          >
+            <AntDesign name="back" size={normalize(20)} />
+          </TouchableOpacity>
+
+          <View style={styles.infoSection}>
+            <Text style={styles.label}>File Name:</Text>
+            <Text style={styles.value}>{fileName}</Text>
           </View>
 
-          <View
-            style={{
-              flexDirection: "row",
-              width: "80%",
-              justifyContent: "space-between",
-              alignSelf: "center",
-
-              alignItems: "center",
-            }}
-          >
-            <Text style={styles.text}>File Name:</Text>
-            <Text style={styles.text}>{fileName}</Text>
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              width: "80%",
-              justifyContent: "space-between",
-              alignSelf: "center",
-              alignItems: "center",
-              marginVertical: 15,
-            }}
-          >
-            <Text style={styles.text}>Title</Text>
+          <View style={styles.inputSection}>
+            <Text style={styles.label}>Title:</Text>
             <TextInput
-              autoCompleteType="off"
               style={styles.input}
-              onChangeText={onChangeTitleText}
+              onChangeText={setTitleText}
               value={titleText}
+              placeholder="Enter title"
+              placeholderTextColor="#999"
             />
           </View>
 
-          <View
-            style={{
-              flexDirection: "row",
-              width: "80%",
-              justifyContent: "center",
-              alignSelf: "center",
-              alignItems: "center",
-            }}
-          >
-            <TouchableOpacity
-              style={styles.submit}
-              onPress={() =>
-                updateBoardItem(sid, titleText).then(() => navigation.goBack())
-              }
-            >
-              <Text style={styles.text}>Submit</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -104,103 +72,62 @@ const EditBoard = ({ navigation, route }) => {
 export default EditBoard;
 
 const styles = StyleSheet.create({
-  text: {
-    fontWeight: "bold",
-    ...Platform.select({
-      ios: {
-        fontSize: normalize(15),
-      },
-      android: {
-        fontSize: normalize(15),
-      },
-      default: {
-        // other platforms, web for example
-        fontSize: "3vw",
-      },
-    }),
-  },
-  input: {
-    backgroundColor: "white",
-    width: "50%",
-    height: "100%",
-    borderRadius: 5,
-    fontSize: normalize(12),
-  },
-  submit: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white",
-    padding: 5,
-    borderRadius: 5,
-  },
-  goBack: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white",
-    padding: 5,
-    borderRadius: 5,
-    ...Platform.select({
-      ios: {
-        maxWidth: "10%",
-      },
-      android: {
-        maxWidth: "10%",
-      },
-      default: {
-        // other platforms, web for example
-        maxWidth: "7%",
-      },
-    }),
-  },
-  boardArea: {
-    borderWidth: 2,
-    borderColor: "black",
-    borderRadius: 10,
-    flex: 8,
-    width: "100%",
-    padding: 10,
-  },
-
-  scroll: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-evenly",
-  },
-
-  board: {
+  container: {
     flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 40,
-    marginBottom: 30,
-    marginHorizontal: 10,
     backgroundColor: "#DBAD6A",
-    borderRadius: 10,
-    padding: 10,
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    paddingHorizontal: 10,
   },
-
-  title: {
-    flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-    width: "100%",
+  header: {
+    marginBottom: 20,
   },
-
-  titleText: {
-    ...Platform.select({
-      ios: {
-        fontSize: normalize(35),
-      },
-      android: {
-        fontSize: normalize(35),
-      },
-      default: {
-        // other platforms, web for example
-        fontSize: "4.5vw",
-      },
-    }),
+  headerText: {
+    fontSize: normalize(35),
     fontWeight: "bold",
     color: "white",
+  },
+  content: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    padding: 20,
+  },
+  goBackButton: {
+    alignSelf: "flex-start",
+    marginBottom: 20,
+  },
+  infoSection: {
+    marginBottom: 20,
+  },
+  inputSection: {
+    marginBottom: 30,
+  },
+  label: {
+    fontSize: normalize(16),
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5,
+  },
+  value: {
+    fontSize: normalize(16),
+    color: "#333",
+  },
+  input: {
+    backgroundColor: "#F0F0F0",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    fontSize: normalize(16),
+    height: 40,
+    color: "#000",
+  },
+  submitButton: {
+    backgroundColor: "#646F4B",
+    paddingVertical: 12,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "white",
+    fontSize: normalize(18),
+    fontWeight: "bold",
   },
 });

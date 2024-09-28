@@ -6,30 +6,85 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Audio } from "expo-av";
-import AppContext from "../core/context/appContext";
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
 import { normalize } from "../core/responsive";
+import { AppContext } from "../core/context/AppState";
 
 const BoardItem = ({ sid, name, title, navigation, src }) => {
   const context = useContext(AppContext);
   const { removeSoundboardItem } = context;
-  const [sound, setSound] = useState();
+  const [sound, setSound] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
 
-  const playSound = async () => {
-    const { sound } = await Audio.Sound.createAsync({ uri: src });
-    setSound(sound);
-    return await sound.playAsync();
+  // Configure audio mode to allow playback
+  const configureAudio = async () => {
+    try {
+      console.log("Configuring audio settings...");
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        playsInSilentModeIOS: true,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        shouldDuckAndroid: true,
+        staysActiveInBackground: true,
+        playThroughEarpieceAndroid: false,
+      });
+      console.log("Audio settings configured.");
+    } catch (error) {
+      console.error("Error configuring audio mode:", error);
+    }
   };
+
+  // Function to play sound
+  const playSound = async () => {
+    try {
+      console.log("Attempting to play sound. Source URI:", src);
+
+      await configureAudio(); // Ensure the audio mode is configured
+
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: src },
+        { shouldPlay: true }
+      );
+      setSound(sound);
+
+      console.log("Sound object created:", sound);
+
+      // Monitor playback status
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isPlaying) {
+          console.log("Sound is playing...");
+        } else if (status.didJustFinish) {
+          console.log("Sound playback finished.");
+          sound.unloadAsync(); // Unload sound when finished
+        }
+      });
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  };
+
+  // Clean up sound on component unmount
   useEffect(() => {
-    return sound ? () => sound.unloadAsync() : undefined;
+    return () => {
+      if (sound) {
+        console.log("Unloading sound...");
+        sound.unloadAsync();
+      }
+    };
   }, [sound]);
 
-  if (showDelete) setTimeout(() => setShowDelete(false), 3000);
+  // Toggle delete/edit view with timeout
+  useEffect(() => {
+    if (showDelete) {
+      const timer = setTimeout(() => setShowDelete(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showDelete]);
 
   return (
     <View style={styles.cont}>
-      {showDelete ? (
+      {showDelete && (
         <View style={styles.modArea}>
           <TouchableOpacity
             style={styles.edit}
@@ -50,7 +105,7 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
             <Text style={styles.buttonText}>Delete?</Text>
           </TouchableOpacity>
         </View>
-      ) : null}
+      )}
 
       <TouchableOpacity
         style={styles.soundButton}
@@ -83,11 +138,11 @@ const styles = StyleSheet.create({
         fontSize: normalize(12),
       },
       default: {
-        // other platforms, web for example
         fontSize: "1.6vw",
       },
     }),
   },
+
   cont: {
     alignItems: "center",
     justifyContent: "center",
@@ -102,7 +157,6 @@ const styles = StyleSheet.create({
         width: normalize(125),
       },
       default: {
-        // other platforms, web for example
         width: "15vw",
         marginHorizontal: 5,
       },
@@ -131,7 +185,6 @@ const styles = StyleSheet.create({
         fontSize: normalize(15),
       },
       default: {
-        // other platforms, web for example
         fontSize: "1.9vw",
       },
     }),
@@ -159,9 +212,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 5,
     alignItems: "center",
-  },
-
-  playerButton: {
-    alignSelf: "flex-end",
   },
 });

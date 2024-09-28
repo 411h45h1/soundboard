@@ -2,24 +2,27 @@ import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 
-import AppState from "./core/context/AppState";
 import Board from "./components/Board";
 import EditBoard from "./components/EditBoard";
 
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import * as Updates from "expo-updates";
+import { AppState } from "./core/context/AppState";
 
-const updateCheck = async () => {
-  await Updates.checkForUpdateAsync().then(async (update) => {
+// Function to handle update checking and reloading if necessary
+const checkForUpdates = async () => {
+  try {
+    const update = await Updates.checkForUpdateAsync();
     if (update.isAvailable) {
-      await Updates.fetchUpdateAsync().then(async (check) => {
-        if (check.isNew) {
-          await Updates.reloadAsync();
-        }
-      });
+      const fetchResult = await Updates.fetchUpdateAsync();
+      if (fetchResult.isNew) {
+        await Updates.reloadAsync();
+      }
     }
-  });
+  } catch (e) {
+    console.error("Error checking for updates:", e);
+  }
 };
 
 const Stack = createStackNavigator();
@@ -28,31 +31,51 @@ export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    const startUp = async () => {
+    const prepareApp = async () => {
       try {
-        // Keep the splash screen visible while we fetch resources
+        // Keep splash screen visible until the app is ready
         await SplashScreen.preventAutoHideAsync();
-        // Pre-load
-        if (__DEV__ === false) {
-          updateCheck();
+
+        // Perform any additional setup (e.g., checking for updates)
+        if (!__DEV__) {
+          await checkForUpdates();
         }
+
+        const configureAudio = async () => {
+          try {
+            console.log("Configuring audio settings...");
+            await Audio.setAudioModeAsync({
+              allowsRecordingIOS: false,
+              interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+              playsInSilentModeIOS: true,
+              interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+              shouldDuckAndroid: true,
+              staysActiveInBackground: true,
+              playThroughEarpieceAndroid: false,
+            });
+            console.log("Audio settings configured.");
+          } catch (error) {
+            console.error("Error configuring audio mode:", error);
+          }
+        };
       } catch (e) {
-        console.warn(e);
+        console.warn("App initialization error:", e);
       } finally {
-        // Tell the application to render
-        setAppIsReady(true);
+        setAppIsReady(true); // Ensure the app is ready to be rendered
       }
     };
 
-    startUp();
+    prepareApp();
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) await SplashScreen.hideAsync();
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
+    }
   }, [appIsReady]);
 
   if (!appIsReady) {
-    return null;
+    return null; // Don't render anything until the app is ready
   }
 
   return (
@@ -67,7 +90,10 @@ export default function App() {
     >
       <AppState>
         <View style={styles.container} onLayout={onLayoutRootView}>
-          <Stack.Navigator headerMode="none" initialRouteName="Home">
+          <Stack.Navigator
+            screenOptions={{ headerShown: false }}
+            initialRouteName="Home"
+          >
             <Stack.Screen name="Home" component={Board} />
             <Stack.Screen name="Edit" component={EditBoard} />
           </Stack.Navigator>
