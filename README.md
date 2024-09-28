@@ -7,7 +7,6 @@ This repository contains a SoundBoard app built using React Native and Expo. Use
 - Create, rename, and delete soundboards.
 - Add and remove sounds from boards.
 - Play and stop sounds.
-- Multi-platform support (Android, iOS, and Web).
 
 ## Prerequisites
 
