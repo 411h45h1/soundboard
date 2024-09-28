@@ -33,7 +33,7 @@ const EditBoard = ({ navigation, route }) => {
       <View style={styles.container}>
         <StatusBar style="auto" />
         <View style={styles.header}>
-          <Text style={styles.headerText}>Edit</Text>
+          <Text style={styles.headerText}>Edit sound</Text>
         </View>
 
         <View style={styles.content}>
@@ -74,7 +74,7 @@ export default EditBoard;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#DBAD6A",
+    backgroundColor: "#5E503F",
     paddingTop: Platform.OS === "ios" ? 60 : 40,
     paddingHorizontal: 10,
   },
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     color: "white",
   },
   content: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#EAE0D5",
     borderRadius: 10,
     padding: 20,
   },

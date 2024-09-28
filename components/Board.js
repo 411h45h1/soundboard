@@ -10,15 +10,15 @@ const Board = ({ navigation }) => {
   const { soundBoard } = useContext(AppContext);
 
   return (
-    <View style={styles.board}>
+    <View style={styles.container}>
       <StatusBar style="auto" />
-      <View style={styles.title}>
+      <View style={styles.titleContainer}>
         <Text style={styles.titleText}>SoundBoard</Text>
       </View>
       <View style={styles.boardArea}>
         <CreateBoardItem />
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
         >
           {soundBoard?.map((item, index) => (
@@ -40,49 +40,29 @@ const Board = ({ navigation }) => {
 export default Board;
 
 const styles = StyleSheet.create({
-  board: {
+  container: {
     flex: 1,
-    backgroundColor: "#DBAD6A",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 35,
-    marginBottom: 20,
-    marginHorizontal: 10,
-    borderRadius: 10,
-    padding: 10,
+    backgroundColor: "#5E503F",
+    paddingTop: 35,
+    paddingBottom: 20,
+    paddingHorizontal: 10,
   },
-
-  boardArea: {
-    width: "100%",
-    padding: 10,
+  titleContainer: {
     marginBottom: 10,
-    flex: 8,
-    borderWidth: 2,
-    borderColor: "black",
-    borderRadius: 10,
-    ...Platform.select({
-      default: {
-        height: "85%",
-      },
-    }),
   },
-
-  scroll: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-evenly",
-  },
-
-  title: {
-    flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-    width: "100%",
-  },
-
   titleText: {
     fontSize: normalize(35),
     fontWeight: "bold",
-    color: "white",
+    color: "#EAE0D5",
+  },
+  boardArea: {
+    flex: 1,
+    backgroundColor: "#5E503F",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-evenly",
   },
 });

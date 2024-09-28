@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
+import { Audio } from "expo-av";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 
@@ -16,46 +16,19 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
   const [sound, setSound] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
 
-  // Configure audio mode to allow playback
-  const configureAudio = async () => {
-    try {
-      console.log("Configuring audio settings...");
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-        playsInSilentModeIOS: true,
-        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-        shouldDuckAndroid: true,
-        staysActiveInBackground: true,
-        playThroughEarpieceAndroid: false,
-      });
-      console.log("Audio settings configured.");
-    } catch (error) {
-      console.error("Error configuring audio mode:", error);
-    }
-  };
-
-  // Function to play sound
   const playSound = async () => {
     try {
-      console.log("Attempting to play sound. Source URI:", src);
-
-      await configureAudio(); // Ensure the audio mode is configured
-
       const { sound } = await Audio.Sound.createAsync(
         { uri: src },
         { shouldPlay: true }
       );
       setSound(sound);
 
-      console.log("Sound object created:", sound);
-
-      // Monitor playback status
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.isPlaying) {
-          console.log("Sound is playing...");
+          //console.log("Sound is playing...");
         } else if (status.didJustFinish) {
-          console.log("Sound playback finished.");
+          //console.log("Sound playback finished.");
           sound.unloadAsync(); // Unload sound when finished
         }
       });
@@ -64,44 +37,34 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
     }
   };
 
-  // Clean up sound on component unmount
   useEffect(() => {
     return () => {
-      if (sound) {
-        console.log("Unloading sound...");
-        sound.unloadAsync();
-      }
+      if (sound) sound.unloadAsync();
     };
   }, [sound]);
 
-  // Toggle delete/edit view with timeout
-  useEffect(() => {
-    if (showDelete) {
-      const timer = setTimeout(() => setShowDelete(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showDelete]);
+  const handleEdit = () => {
+    setShowDelete(false);
+    navigation.navigate("Edit", {
+      sid,
+      fileName: name,
+      title,
+    });
+  };
+
+  const handleDelete = () => {
+    removeSoundboardItem(sid);
+    setShowDelete(false);
+  };
 
   return (
     <View style={styles.cont}>
       {showDelete && (
         <View style={styles.modArea}>
-          <TouchableOpacity
-            style={styles.edit}
-            onPress={() =>
-              navigation.navigate("Edit", {
-                sid,
-                fileName: name,
-                title,
-              })
-            }
-          >
+          <TouchableOpacity style={styles.edit} onPress={handleEdit}>
             <Text style={styles.buttonText}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.delete}
-            onPress={() => removeSoundboardItem(sid)}
-          >
+          <TouchableOpacity style={styles.delete} onPress={handleDelete}>
             <Text style={styles.buttonText}>Delete?</Text>
           </TouchableOpacity>
         </View>
@@ -164,18 +127,17 @@ const styles = StyleSheet.create({
   },
 
   soundButton: {
-    padding: 2,
+    minHeight: "20%",
+    width: "100%",
     borderWidth: 2,
-    borderColor: "black",
-    backgroundColor: "#646F4B",
+    backgroundColor: "#EAE0D5",
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
   },
 
   soundBoardText: {
     fontWeight: "bold",
-    color: "white",
     marginVertical: 25,
     ...Platform.select({
       ios: {

@@ -2,7 +2,7 @@
   "expo": {
     "name": "SoundBoard",
     "slug": "SoundBoard",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -16,7 +16,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.ourends.soundboard",
-      "buildNumber": "1.0.5",
+      "buildNumber": "1.0.6",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
@@ -28,7 +28,7 @@
     "android": {
       "permissions": [],
       "package": "com.ourends.soundboard",
-      "versionCode": 6,
+      "versionCode": 7,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FFFFFF"
