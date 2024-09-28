@@ -13,7 +13,6 @@ This repository contains a SoundBoard app built using React Native and Expo. Use
 
 - [Node.js](https://nodejs.org/) (v14.x or later)
 - [Yarn](https://yarnpkg.com/) (v1.x or later)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
 - [Git](https://git-scm.com/)
 
 ## Setup Instructions
