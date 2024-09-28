@@ -6,13 +6,18 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "development"
     },
     "preview": {
-      "distribution": "internal"
+      "channel": "stg",
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
     },
     "production": {
-      "autoIncrement": true
+      "channel": "prod"
     }
   },
   "submit": {
