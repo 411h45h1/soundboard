@@ -1,6 +1,5 @@
 import React, { useContext } from "react";
 import { StyleSheet, TouchableOpacity, Text } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
@@ -27,7 +26,6 @@ const CreateBoardItem = () => {
 
   return (
     <TouchableOpacity style={styles.container} onPress={pickAudio}>
-      <AntDesign name="addfile" size={normalize(20)} color="#EAE0D5" />
       <Text style={styles.text}>Add Sound</Text>
     </TouchableOpacity>
   );
@@ -37,18 +35,16 @@ export default CreateBoardItem;
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
     borderRadius: 10,
-    alignSelf: "flex-end",
-    flexDirection: "row",
+    justifyContent: "center",
+    borderRadius: 10,
     alignItems: "center",
-    marginBottom: 10,
+    paddingHorizontal: 10,
+    marginRight: 10,
   },
   text: {
     color: "#EAE0D5",
     fontWeight: "bold",
     fontSize: normalize(16),
-    marginLeft: 8,
   },
 });

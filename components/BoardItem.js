@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -8,28 +8,32 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import { normalize } from "../core/responsive";
-import { AppContext } from "../core/context/AppState";
 
-const BoardItem = ({ sid, name, title, navigation, src }) => {
-  const context = useContext(AppContext);
-  const { removeSoundboardItem } = context;
+const BoardItem = ({
+  sid,
+  name,
+  title,
+  src,
+  onPlaySound,
+  navigation,
+  removeSoundboardItem,
+}) => {
   const [sound, setSound] = useState(null);
-  const [showDelete, setShowDelete] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const playSound = async () => {
     try {
+      console.log("Attempting to play sound. Source URI:", src);
       const { sound } = await Audio.Sound.createAsync(
         { uri: src },
         { shouldPlay: true }
       );
       setSound(sound);
-
+      onPlaySound(sound);
       sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isPlaying) {
-          //console.log("Sound is playing...");
-        } else if (status.didJustFinish) {
-          //console.log("Sound playback finished.");
-          sound.unloadAsync(); // Unload sound when finished
+        if (status.didJustFinish) {
+          console.log("Sound playback finished.");
+          sound.unloadAsync();
         }
       });
     } catch (error) {
@@ -39,33 +43,42 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
 
   useEffect(() => {
     return () => {
-      if (sound) sound.unloadAsync();
+      if (sound) {
+        sound.unloadAsync();
+      }
     };
   }, [sound]);
 
-  const handleEdit = () => {
-    setShowDelete(false);
-    navigation.navigate("Edit", {
-      sid,
-      fileName: name,
-      title,
-    });
-  };
-
-  const handleDelete = () => {
-    removeSoundboardItem(sid);
-    setShowDelete(false);
+  const handleLongPress = () => {
+    setShowActions((prev) => !prev);
   };
 
   return (
     <View style={styles.cont}>
-      {showDelete && (
-        <View style={styles.modArea}>
-          <TouchableOpacity style={styles.edit} onPress={handleEdit}>
-            <Text style={styles.buttonText}>Edit</Text>
+      {showActions && (
+        <View style={styles.actionMenu}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => {
+              navigation.navigate("Edit", {
+                sid,
+                fileName: name,
+                title,
+              });
+              setShowActions(false);
+            }}
+          >
+            <Text style={styles.actionText}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.delete} onPress={handleDelete}>
-            <Text style={styles.buttonText}>Delete?</Text>
+
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => {
+              removeSoundboardItem(sid);
+              setShowActions(false);
+            }}
+          >
+            <Text style={styles.actionText}>Delete</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -73,7 +86,7 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
       <TouchableOpacity
         style={styles.soundButton}
         onPress={playSound}
-        onLongPress={() => setShowDelete(!showDelete)}
+        onLongPress={handleLongPress}
       >
         {title ? (
           <Text style={styles.soundBoardText}>{title}</Text>
@@ -88,30 +101,11 @@ const BoardItem = ({ sid, name, title, navigation, src }) => {
 export default BoardItem;
 
 const styles = StyleSheet.create({
-  buttonText: {
-    fontWeight: "bold",
-    color: "white",
-    marginHorizontal: 5,
-
-    ...Platform.select({
-      ios: {
-        fontSize: normalize(12),
-      },
-      android: {
-        fontSize: normalize(12),
-      },
-      default: {
-        fontSize: "1.6vw",
-      },
-    }),
-  },
-
   cont: {
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
     marginVertical: 15,
-
     ...Platform.select({
       ios: {
         width: normalize(125),
@@ -125,7 +119,6 @@ const styles = StyleSheet.create({
       },
     }),
   },
-
   soundButton: {
     minHeight: "20%",
     width: "100%",
@@ -135,7 +128,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
   soundBoardText: {
     fontWeight: "bold",
     marginVertical: 25,
@@ -151,28 +143,30 @@ const styles = StyleSheet.create({
       },
     }),
   },
-
-  modArea: {
+  actionMenu: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-  },
-
-  delete: {
-    margin: 2,
-    padding: 5,
-    backgroundColor: "tomato",
-    borderRadius: 5,
     marginBottom: 5,
-    alignItems: "center",
   },
-
-  edit: {
-    margin: 2,
-    padding: 5,
+  editButton: {
     backgroundColor: "#646F4B",
+    padding: 5,
     borderRadius: 5,
-    marginBottom: 5,
+    marginHorizontal: 5,
+    flex: 1,
     alignItems: "center",
+  },
+  deleteButton: {
+    backgroundColor: "tomato",
+    padding: 5,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    flex: 1,
+    alignItems: "center",
+  },
+  actionText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });

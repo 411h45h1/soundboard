@@ -1,120 +1,152 @@
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system";
-import * as DocumentPicker from "expo-document-picker";
 
 const AppContext = React.createContext();
 
 const AppState = (props) => {
-  const [soundBoard, setSoundBoard] = useState([]);
+  const [boards, setBoards] = useState([]);
+  const [currentBoard, setCurrentBoard] = useState(null);
 
   useEffect(() => {
-    getSoundBoard();
+    getBoards();
   }, []);
 
-  const getSoundBoard = async () => {
+  const getBoards = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem("soundboard");
+      const jsonValue = await AsyncStorage.getItem("soundboards");
       if (jsonValue !== null) {
-        const parsedData = JSON.parse(jsonValue);
-        setSoundBoard(parsedData);
+        const parsedBoards = JSON.parse(jsonValue);
+        setBoards(parsedBoards);
+        if (parsedBoards.length > 0) setCurrentBoard(parsedBoards[0]);
       }
     } catch (e) {
-      console.log("Error reading soundboard data:", e);
+      console.error("Error fetching boards:", e);
     }
   };
 
-  const storeAudioFilePermanently = async (uri, fileName) => {
-    const newFileUri = `${FileSystem.documentDirectory}${fileName}`;
+  const saveBoardsToStorage = async (updatedBoards) => {
     try {
-      await FileSystem.moveAsync({
-        from: uri,
-        to: newFileUri,
-      });
-
-      return newFileUri;
+      await AsyncStorage.setItem("soundboards", JSON.stringify(updatedBoards));
     } catch (e) {
-      console.log("Error moving file:", e);
-      return null;
+      console.error("Error saving boards:", e);
     }
   };
 
-  const updateSoundBoard = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "audio/*",
-      });
+  const createBoard = (name) => {
+    const newBoard = {
+      id: Date.now(),
+      name,
+      sounds: [],
+    };
+    const updatedBoards = [...boards, newBoard];
+    setBoards(updatedBoards);
+    setCurrentBoard(newBoard);
+    saveBoardsToStorage(updatedBoards);
+  };
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const { name, uri } = result.assets[0];
-        const id = Date.now() + Math.floor(Math.random() * 9000) + 1000;
-
-        const permanentUri = await storeAudioFilePermanently(uri, name);
-        if (!permanentUri) return;
-        const soundObj = { sid: id, name, uri: permanentUri };
-
-        const existingData = (await AsyncStorage.getItem("soundboard")) || "[]";
-        const parsedData = JSON.parse(existingData);
-
-        const updatedSoundBoard = [...parsedData, soundObj];
-
-        await AsyncStorage.setItem(
-          "soundboard",
-          JSON.stringify(updatedSoundBoard)
-        );
-        setSoundBoard(updatedSoundBoard);
-      }
-    } catch (e) {
-      console.log("Error updating soundboard:", e);
+  const ensureBoardExists = () => {
+    if (boards.length === 0) {
+      createBoard("First Board");
     }
   };
 
-  const removeSoundboardItem = async (sid) => {
-    try {
-      const existingData = (await AsyncStorage.getItem("soundboard")) || "[]";
-      const parsedData = JSON.parse(existingData);
-      const soundToRemove = parsedData.find((item) => item.sid === sid);
+  const updateSoundBoard = (soundObj) => {
+    ensureBoardExists();
+    if (!currentBoard) return;
+    const updatedBoard = {
+      ...currentBoard,
+      sounds: [...currentBoard.sounds, soundObj],
+    };
 
-      if (soundToRemove) {
-        await FileSystem.deleteAsync(soundToRemove.uri, { idempotent: true });
+    const updatedBoards = boards.map((board) =>
+      board.id === currentBoard.id ? updatedBoard : board
+    );
+    setBoards(updatedBoards);
+    setCurrentBoard(updatedBoard);
+    saveBoardsToStorage(updatedBoards);
+  };
 
-        const updatedSoundBoard = parsedData.filter((item) => item.sid !== sid);
+  const updateBoardItem = (sid, updatedData) => {
+    if (!currentBoard) return;
 
-        await AsyncStorage.setItem(
-          "soundboard",
-          JSON.stringify(updatedSoundBoard)
-        );
-        setSoundBoard(updatedSoundBoard);
-      }
-    } catch (e) {
-      console.log("Error removing soundboard item:", e);
+    const updatedBoard = {
+      ...currentBoard,
+      sounds: currentBoard.sounds.map((sound) =>
+        sound.sid === sid ? { ...sound, ...updatedData } : sound
+      ),
+    };
+
+    const updatedBoards = boards.map((board) =>
+      board.id === currentBoard.id ? updatedBoard : board
+    );
+
+    setBoards(updatedBoards);
+    setCurrentBoard(updatedBoard);
+    saveBoardsToStorage(updatedBoards);
+  };
+
+  const removeSoundboardItem = (sid) => {
+    if (!currentBoard) return;
+
+    const updatedBoard = {
+      ...currentBoard,
+      sounds: currentBoard.sounds.filter((sound) => sound.sid !== sid),
+    };
+
+    const updatedBoards = boards.map((board) =>
+      board.id === currentBoard.id ? updatedBoard : board
+    );
+    setBoards(updatedBoards);
+    setCurrentBoard(updatedBoard);
+    saveBoardsToStorage(updatedBoards);
+  };
+
+  const switchBoard = (boardId) => {
+    const selectedBoard = boards.find((board) => board.id === boardId);
+    if (selectedBoard) setCurrentBoard(selectedBoard);
+  };
+
+  const removeBoard = (boardId) => {
+    const updatedBoards = boards.filter((board) => board.id !== boardId);
+    if (updatedBoards.length === 0) {
+      const newBoard = {
+        id: Date.now(),
+        name: "First Board",
+        sounds: [],
+      };
+      setBoards([newBoard]);
+      setCurrentBoard(newBoard);
+      saveBoardsToStorage([newBoard]);
+    } else {
+      setBoards(updatedBoards);
+      setCurrentBoard(updatedBoards[0]);
+      saveBoardsToStorage(updatedBoards);
     }
   };
 
-  const updateBoardItem = async (sid, title) => {
-    try {
-      const existingData = (await AsyncStorage.getItem("soundboard")) || "[]";
-      const parsedData = JSON.parse(existingData);
-      const objIndex = parsedData.findIndex((o) => o.sid === sid);
-
-      if (objIndex !== -1) {
-        parsedData[objIndex].title = title;
-
-        await AsyncStorage.setItem("soundboard", JSON.stringify(parsedData));
-        setSoundBoard(parsedData);
-      }
-    } catch (e) {
-      console.log("Error updating board item:", e);
-    }
+  const renameBoard = (boardId, newName) => {
+    const updatedBoards = boards.map((board) =>
+      board.id === boardId ? { ...board, name: newName } : board
+    );
+    setBoards(updatedBoards);
+    setCurrentBoard(
+      updatedBoards.find((board) => board.id === boardId) || null
+    );
+    saveBoardsToStorage(updatedBoards);
   };
 
   return (
     <AppContext.Provider
       value={{
-        soundBoard,
+        boards,
+        currentBoard,
+        createBoard,
+        switchBoard,
         updateSoundBoard,
         updateBoardItem,
         removeSoundboardItem,
+        removeBoard,
+        renameBoard,
       }}
     >
       {props.children}

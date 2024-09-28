@@ -2,7 +2,6 @@ import { Dimensions, Platform, PixelRatio } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Base scale for a standard device (iPhone 5s)
 const baseWidth = 320;
 const scale = SCREEN_WIDTH / baseWidth;
 
@@ -40,7 +39,6 @@ export const font = (style) => {
   }
 };
 
-// Check if the device is a large screen (e.g., tablets)
 export const isLargeScreen = SCREEN_WIDTH >= 768;
 
 /**

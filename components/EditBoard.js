@@ -20,7 +20,7 @@ const EditBoard = ({ navigation, route }) => {
 
   const handleSubmit = () => {
     if (titleText.trim()) {
-      updateBoardItem(sid, titleText);
+      updateBoardItem(sid, { title: titleText });
       navigation.goBack();
     }
   };
