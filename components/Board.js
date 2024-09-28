@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import BoardItem from "./BoardItem";
 import CreateBoardItem from "./CreateBoardItem";
-import { StatusBar } from "expo-status-bar";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 
@@ -11,7 +10,6 @@ const Board = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
       <View style={styles.titleContainer}>
         <Text style={styles.titleText}>SoundBoard</Text>
       </View>

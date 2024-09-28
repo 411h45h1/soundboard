@@ -9,7 +9,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
 import { AntDesign } from "@expo/vector-icons";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
@@ -23,15 +22,12 @@ const EditBoard = ({ navigation, route }) => {
     if (titleText.trim()) {
       updateBoardItem(sid, titleText);
       navigation.goBack();
-    } else {
-      alert("Title cannot be empty.");
     }
   };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
-        <StatusBar style="auto" />
         <View style={styles.header}>
           <Text style={styles.headerText}>Edit sound</Text>
         </View>

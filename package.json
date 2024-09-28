@@ -1,13 +1,22 @@
 {
   "main": "node_modules/expo/AppEntry.js",
+  "version": "1.0.9",
   "scripts": {
     "start": "expo start",
+    "clean": "rimraf .expo .expo-shared node_modules yarn.lock",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "eject": "expo eject",
     "publish": "expo publish",
-    "publish:web": "expo build:web && netlify deploy --prod"
+    "publish:web": "expo build:web && netlify deploy --prod",
+    "build": "eas build --platform all",
+    "build:submit:ios": "yarn build:ios && yarn submit:ios",
+    "build:ios": "eas build --platform ios",
+    "submit:ios": "eas submit -p ios",
+    "submit:android": "eas submit -p android",
+    "submit:all": "eas submit -p all",
+    "build:submit:all": "yarn build && yarn submit:all"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",

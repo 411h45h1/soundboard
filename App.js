@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 
 import Board from "./components/Board";
 import EditBoard from "./components/EditBoard";
@@ -78,6 +79,7 @@ export default function App() {
 
   return (
     <NavigationContainer
+      ac
       theme={{
         ...DefaultTheme,
         colors: {
@@ -87,6 +89,8 @@ export default function App() {
       }}
     >
       <AppState>
+        <StatusBar animated={true} style="light" />
+
         <View style={styles.container} onLayout={onLayoutRootView}>
           <Stack.Navigator
             screenOptions={{ headerShown: false }}
