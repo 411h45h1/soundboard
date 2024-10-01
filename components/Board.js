@@ -28,7 +28,7 @@ const Board = ({ navigation }) => {
   const [renameBoardName, setRenameBoardName] = useState("");
   const [showCreateBoard, setShowCreateBoard] = useState(false);
   const [showRenameBoard, setShowRenameBoard] = useState(false);
-  const [showControls, setShowControls] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const [showSelectBoard, setShowSelectBoard] = useState(false);
   const playingSounds = useRef([]);
 
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5E503F",
     paddingTop: 35,
     paddingBottom: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
   },
   titleContainer: {
     marginBottom: 10,

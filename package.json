@@ -1,6 +1,6 @@
 {
   "main": "node_modules/expo/AppEntry.js",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "scripts": {
     "start": "expo start",
     "clean": "rimraf .expo .expo-shared node_modules yarn.lock",
@@ -12,11 +12,14 @@
     "publish:web": "expo build:web && netlify deploy --prod",
     "build": "eas build --platform all",
     "build:submit:ios": "yarn build:ios && yarn submit:ios",
+    "build:dev:ios": "eas build --profile development --platform ios",
     "build:ios": "eas build --platform ios",
     "submit:ios": "eas submit -p ios",
     "submit:android": "eas submit -p android",
     "submit:all": "eas submit -p all",
-    "build:submit:all": "yarn build && yarn submit:all"
+    "build:submit:all": "yarn build && yarn submit:all",
+    "update:branch:prod": "eas update --branch prod --auto",
+    "update:branch:stg": "eas update --branch stg --auto"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -25,6 +28,7 @@
     "@react-navigation/stack": "^5.14.5",
     "expo": "^51.0.34",
     "expo-av": "~14.0.7",
+    "expo-dev-client": "~4.0.27",
     "expo-document-picker": "~12.0.2",
     "expo-splash-screen": "~0.27.6",
     "expo-status-bar": "~1.12.1",
