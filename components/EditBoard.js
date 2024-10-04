@@ -70,7 +70,7 @@ export default EditBoard;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#5E503F",
+    backgroundColor: "#5E403F",
     paddingTop: Platform.OS === "ios" ? 60 : 40,
     paddingHorizontal: 10,
   },
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     color: "white",
   },
   content: {
-    backgroundColor: "#EAE0D5",
+    backgroundColor: "#A57878",
     borderRadius: 10,
     padding: 20,
   },
@@ -100,20 +100,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: normalize(16),
     fontWeight: "bold",
-    color: "#333",
+    color: "#EAE0D5",
     marginBottom: 5,
   },
   value: {
     fontSize: normalize(16),
-    color: "#333",
+    color: "#EAE0D5",
   },
   input: {
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#5E403F",
     borderRadius: 5,
     paddingHorizontal: 10,
     fontSize: normalize(16),
     height: 40,
-    color: "#000",
+    color: "#EAE0D5",
   },
   submitButton: {
     backgroundColor: "#646F4B",
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   submitButtonText: {
-    color: "white",
+    color: "#EAE0D5",
     fontSize: normalize(18),
     fontWeight: "bold",
   },

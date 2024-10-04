@@ -97,7 +97,9 @@ const Board = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.toggleButton}
-          onPress={() => setShowControls(!showControls)}
+          onPress={() => {
+            setShowControls(!showControls);
+          }}
         >
           <Text style={styles.toggleButtonText}>
             {showControls ? "Hide Controls" : "Controls"}
@@ -137,9 +139,10 @@ const Board = ({ navigation }) => {
           <ScrollView
             horizontal
             style={{
-              backgroundColor: "#8c775e",
-              borderRadius: 10,
+              backgroundColor: "#A57878",
+              borderRadius: 5,
               paddingTop: 10,
+              marginBottom: 10,
             }}
             contentContainerStyle={styles.actionButtons}
           >
@@ -247,7 +250,7 @@ export default Board;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#5E503F",
+    backgroundColor: "#5E403F",
     paddingTop: 35,
     paddingBottom: 20,
     paddingHorizontal: 5,
@@ -348,13 +351,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: "white",
-    padding: 10,
+    backgroundColor: "#A57878",
+    height: "100%",
     borderRadius: 5,
     marginRight: 10,
   },
   createBoardButton: {
-    backgroundColor: "#5A9F5A",
+    backgroundColor: "#A57878",
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
   },
   boardArea: {
     flex: 1,
-    backgroundColor: "#5E503F",
+    backgroundColor: "#5E403F",
   },
   scrollContainer: {
     flexGrow: 1,

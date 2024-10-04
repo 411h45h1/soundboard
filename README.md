@@ -90,5 +90,3 @@ This removes the `.expo` and `node_modules` folders and the `yarn.lock` file.
   ```
 
 ---
-
-Happy coding!

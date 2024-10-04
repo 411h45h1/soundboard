@@ -84,7 +84,7 @@ export default function App() {
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: "#5E503F",
+          background: "#5E403F",
         },
       }}
     >
@@ -108,6 +108,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#5E503F",
+    backgroundColor: "#5E403F",
   },
 });

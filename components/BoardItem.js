@@ -122,14 +122,15 @@ const styles = StyleSheet.create({
   soundButton: {
     minHeight: "20%",
     width: "100%",
-    borderWidth: 2,
-    backgroundColor: "#EAE0D5",
+    backgroundColor: "#A57878",
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
   soundBoardText: {
     fontWeight: "bold",
+    color: "#EAE0D5",
+
     marginVertical: 25,
     ...Platform.select({
       ios: {

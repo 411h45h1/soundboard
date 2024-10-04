@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system";
 
 const AppContext = React.createContext();
 
@@ -9,7 +10,6 @@ const AppState = (props) => {
 
   useEffect(() => {
     getBoards();
-    //clearAllData();
   }, []);
 
   const getBoards = async () => {
@@ -27,26 +27,58 @@ const AppState = (props) => {
     }
   };
 
-  // const clearAllData = async () => {
-  //   try {
-  //     await AsyncStorage.clear();
-  //     setBoards([]);
-  //     setCurrentBoard(null);
-  //     console.log("All app data cleared.");
-  //   } catch (e) {
-  //     console.error("Error clearing app data:", e);
-  //   }
-  // };
-
   const createDefaultBoard = useCallback(async () => {
-    const defaultBoard = {
-      id: Date.now(),
-      name: "First Board",
-      sounds: [],
-    };
-    setBoards([defaultBoard]);
-    setCurrentBoard(defaultBoard);
-    await saveBoardsToStorage([defaultBoard]);
+    try {
+      const defaultBoard = {
+        id: Date.now(),
+        name: "First Board",
+        sounds: [],
+      };
+
+      const defaultSoundsRemoved = await AsyncStorage.getItem(
+        "defaultSoundsRemoved"
+      );
+
+      if (defaultSoundsRemoved !== "true") {
+        const defaultSounds = [
+          {
+            sid: Date.now() + 1,
+            uri: "https://firebasestorage.googleapis.com/v0/b/powerlv-a2081.appspot.com/o/assets%2FCrash.mp3?alt=media&token=f7009ced-8eee-4210-ac98-7635d6eb486b",
+            name: "crash_notso_software.mp3",
+            title: "Crash Sound",
+          },
+          {
+            sid: Date.now() + 2,
+            uri: "https://firebasestorage.googleapis.com/v0/b/powerlv-a2081.appspot.com/o/assets%2Fding.mp3?alt=media&token=517271f9-5e73-48a1-92bc-fd9438aa24b3",
+            name: "ding_notso_software.mp3",
+            title: "Ding Sound",
+          },
+        ];
+
+        for (const sound of defaultSounds) {
+          const localUri = `${FileSystem.documentDirectory}${sound.name}`;
+
+          const fileInfo = await FileSystem.getInfoAsync(localUri);
+          if (!fileInfo.exists) {
+            try {
+              await FileSystem.downloadAsync(sound.uri, localUri);
+            } catch (error) {
+              console.error(`Error downloading ${sound.name}:`, error);
+              continue;
+            }
+          }
+
+          sound.uri = localUri;
+          defaultBoard.sounds.push(sound);
+        }
+      }
+
+      setBoards([defaultBoard]);
+      setCurrentBoard(defaultBoard);
+      await saveBoardsToStorage([defaultBoard]);
+    } catch (e) {
+      console.error("Error creating default board:", e);
+    }
   }, []);
 
   const saveBoardsToStorage = useCallback(async (updatedBoards) => {
@@ -113,8 +145,12 @@ const AppState = (props) => {
   );
 
   const removeSoundboardItem = useCallback(
-    (sid) => {
+    async (sid) => {
       if (!currentBoard) return;
+
+      const soundToRemove = currentBoard.sounds.find(
+        (sound) => sound.sid === sid
+      );
 
       const updatedBoard = {
         ...currentBoard,
@@ -127,6 +163,32 @@ const AppState = (props) => {
       setBoards(updatedBoards);
       setCurrentBoard(updatedBoard);
       saveBoardsToStorage(updatedBoards);
+
+      if (
+        soundToRemove &&
+        soundToRemove.uri &&
+        soundToRemove.uri.startsWith(FileSystem.documentDirectory)
+      ) {
+        try {
+          await FileSystem.deleteAsync(soundToRemove.uri);
+        } catch (error) {
+          console.error("Error deleting sound file:", error);
+        }
+      }
+
+      // Update defaultSoundsRemoved flag if necessary
+      const defaultSoundNames = [
+        "crash_notso_software.mp3",
+        "ding_notso_software.mp3",
+      ];
+      const remainingSoundNames = updatedBoard.sounds.map(
+        (sound) => sound.name
+      );
+      if (
+        !defaultSoundNames.some((name) => remainingSoundNames.includes(name))
+      ) {
+        await AsyncStorage.setItem("defaultSoundsRemoved", "true");
+      }
     },
     [currentBoard, boards, saveBoardsToStorage]
   );
