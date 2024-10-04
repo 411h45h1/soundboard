@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { StyleSheet, TouchableOpacity, Text } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { normalize } from "../core/responsive";
+import { isLandscape, isTablet, normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 
 const CreateBoardItem = () => {
@@ -45,6 +45,6 @@ const styles = StyleSheet.create({
   text: {
     color: "#EAE0D5",
     fontWeight: "bold",
-    fontSize: normalize(16),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
   },
 });

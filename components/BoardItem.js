@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Dimensions,
   Platform,
   StyleSheet,
   Text,
@@ -7,7 +8,9 @@ import {
   View,
 } from "react-native";
 import { Audio } from "expo-av";
-import { normalize } from "../core/responsive";
+import { isLandscape, isTablet, normalize } from "../core/responsive";
+
+const { width, height } = Dimensions.get("window");
 
 const BoardItem = ({
   sid,
@@ -106,22 +109,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
     marginVertical: 15,
-    ...Platform.select({
-      ios: {
-        width: normalize(125),
-      },
-      android: {
-        width: normalize(125),
-      },
-      default: {
-        width: "15vw",
-        marginHorizontal: 5,
-      },
-    }),
+    width: isTablet() ? normalize(100) : normalize(125),
   },
   soundButton: {
-    minHeight: "20%",
-    width: "100%",
+    height: isTablet() ? height * 0.2 : height * 0.1,
+    width: isTablet() ? width * 0.3 : width * 0.4,
     backgroundColor: "#A57878",
     borderRadius: 10,
     alignItems: "center",
@@ -130,19 +122,10 @@ const styles = StyleSheet.create({
   soundBoardText: {
     fontWeight: "bold",
     color: "#EAE0D5",
-
+    width: "100%",
+    textAlign: "center",
     marginVertical: 25,
-    ...Platform.select({
-      ios: {
-        fontSize: normalize(15),
-      },
-      android: {
-        fontSize: normalize(15),
-      },
-      default: {
-        fontSize: "1.9vw",
-      },
-    }),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(15),
   },
   actionMenu: {
     flexDirection: "row",

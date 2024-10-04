@@ -39,6 +39,10 @@ export const font = (style) => {
   }
 };
 
+/**
+ * Check if the device is considered a large screen (tablet)
+ * @returns {boolean} - True if device is a tablet
+ */
 export const isLargeScreen = SCREEN_WIDTH >= 768;
 
 /**
@@ -49,3 +53,18 @@ export const getScreenDimensions = () => ({
   width: SCREEN_WIDTH,
   height: SCREEN_HEIGHT,
 });
+
+/**
+ * Check if the device is in landscape mode
+ * @returns {boolean} - True if the device is in landscape mode
+ */
+export const isLandscape = () => SCREEN_WIDTH > SCREEN_HEIGHT;
+
+/**
+ * Check if the device is a tablet
+ * @returns {boolean} - True if the device is a tablet (based on screen size)
+ */
+export const isTablet = () => {
+  const aspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH;
+  return isLargeScreen && aspectRatio < 1.6; // Typical tablet aspect ratio is around 1.33 (4:3)
+};

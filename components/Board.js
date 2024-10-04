@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import BoardItem from "./BoardItem";
 import CreateBoardItem from "./CreateBoardItem";
-import { normalize } from "../core/responsive";
+import { isLandscape, isTablet, normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 
 const Board = ({ navigation }) => {
@@ -259,12 +259,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   titleText: {
-    fontSize: normalize(35),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(35),
     fontWeight: "bold",
     color: "#EAE0D5",
   },
   boardNameText: {
-    fontSize: normalize(15),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(15),
     color: "#EAE0D5",
     textAlign: "left",
   },
@@ -279,13 +279,13 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     color: "#EAE0D5",
     fontWeight: "bold",
-    fontSize: normalize(16),
+    fontSize: isLandscape() && isTablet() ? normalize(8) : normalize(16),
   },
   boardSelector: {
     marginBottom: 20,
   },
   selectBoardText: {
-    fontSize: normalize(16),
+    fontSize: isLandscape() && isTablet() ? normalize(8) : normalize(16),
     fontWeight: "bold",
     color: "#EAE0D5",
     marginBottom: 10,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5A9F5A",
   },
   boardButtonText: {
-    fontSize: normalize(16),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
     color: "#EAE0D5",
     fontWeight: "bold",
   },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   controlButtonText: {
     color: "#EAE0D5",
     fontWeight: "bold",
-    fontSize: normalize(16),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
   },
   deleteBoardButton: {
     backgroundColor: "#D9534F",
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   stopAllText: {
     color: "#EAE0D5",
     fontWeight: "bold",
-    fontSize: normalize(16),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
   },
   newBoardContainer: {
     flexDirection: "row",
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   createBoardText: {
     color: "#EAE0D5",
     fontWeight: "bold",
-    fontSize: normalize(16),
+    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
   },
   boardArea: {
     flex: 1,
