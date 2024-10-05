@@ -1,7 +1,6 @@
 import React, { useContext, useState, useRef } from "react";
 import {
   ScrollView,
-  StyleSheet,
   Text,
   View,
   TextInput,
@@ -10,8 +9,9 @@ import {
 } from "react-native";
 import BoardItem from "./BoardItem";
 import CreateBoardItem from "./CreateBoardItem";
-import { isLandscape, isTablet, normalize } from "../core/responsive";
+import { useIsLandscape, normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
+import RecordAudioButton from "./RecordAudioButton";
 
 const Board = ({ navigation }) => {
   const {
@@ -31,6 +31,9 @@ const Board = ({ navigation }) => {
   const [showControls, setShowControls] = useState(true);
   const [showSelectBoard, setShowSelectBoard] = useState(false);
   const playingSounds = useRef([]);
+  const isLandscape = useIsLandscape(); // Detect orientation
+
+  console.log("isLandscape", isLandscape);
 
   const stopAllSounds = async () => {
     if (playingSounds.current.length > 0) {
@@ -81,131 +84,325 @@ const Board = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.titleContainer}>
-        <Text style={styles.titleText}>SoundBoard</Text>
-      </View>
-
-      <View style={styles.toggleButtonsContainer}>
-        <TouchableOpacity
-          style={styles.toggleButton}
-          onPress={() => setShowSelectBoard(!showSelectBoard)}
-        >
-          <Text style={styles.toggleButtonText}>
-            {showSelectBoard ? "Hide Select Board" : "Select Board"}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.toggleButton}
-          onPress={() => {
-            setShowControls(!showControls);
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#5E403F",
+        paddingHorizontal: 5,
+      }}
+    >
+      <View
+        style={{
+          marginBottom: 10,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: isLandscape ? normalize(10) : normalize(35),
+            fontWeight: "bold",
+            color: "#EAE0D5",
           }}
         >
-          <Text style={styles.toggleButtonText}>
-            {showControls ? "Hide Controls" : "Controls"}
-          </Text>
-        </TouchableOpacity>
+          SoundBoard
+        </Text>
       </View>
 
-      {showSelectBoard && boards.length > 0 && (
-        <View style={styles.boardSelector}>
-          <Text style={styles.selectBoardText}>Select Board:</Text>
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.boardList}
-            showsHorizontalScrollIndicator={false}
-          >
-            {boards.map((board) => (
-              <TouchableOpacity
-                key={board.id}
-                style={[
-                  styles.boardButton,
-                  currentBoard &&
-                    currentBoard.id === board.id &&
-                    styles.activeBoard,
-                ]}
-                onPress={() => switchBoard(board.id)}
-              >
-                <Text style={styles.boardButtonText}>{board.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {showControls && (
-        <View>
-          <Text style={styles.selectBoardText}>Controls:</Text>
-          <ScrollView
-            horizontal
-            style={{
-              backgroundColor: "#A57878",
-              borderRadius: 5,
-              paddingTop: 10,
-              marginBottom: 10,
-            }}
-            contentContainerStyle={styles.actionButtons}
-          >
-            <CreateBoardItem />
-            <TouchableOpacity
-              style={styles.controlButton}
-              onPress={() => setShowCreateBoard(!showCreateBoard)}
-            >
-              <Text style={styles.controlButtonText}>Add Board</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.controlButton}
-              onPress={() => setShowRenameBoard(!showRenameBoard)}
-            >
-              <Text style={styles.controlButtonText}>Rename Board</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.controlButton, styles.deleteBoardButton]}
-              onPress={handleDeleteBoard}
-            >
-              <Text style={styles.controlButtonText}>Delete Board</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      )}
-
-      {showCreateBoard && (
-        <View style={styles.newBoardContainer}>
-          <TextInput
-            placeholder="New Board Name"
-            value={newBoardName}
-            onChangeText={setNewBoardName}
-            style={styles.input}
-          />
-          <TouchableOpacity
-            style={styles.createBoardButton}
-            onPress={handleCreateBoard}
-          >
-            <Text style={styles.createBoardText}>Create</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {showRenameBoard && (
-        <View style={styles.newBoardContainer}>
-          <TextInput
-            placeholder="Rename Board"
-            value={renameBoardName}
-            onChangeText={setRenameBoardName}
-            style={styles.input}
-          />
-          <TouchableOpacity
-            style={styles.createBoardButton}
-            onPress={handleRenameBoard}
-          >
-            <Text style={styles.createBoardText}>Rename</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       {currentBoard && (
-        <View style={styles.boardArea}>
-          <ScrollView keyboardShouldPersistTaps="handled">
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#5E403F",
+          }}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: 10,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 20,
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  borderRadius: 10,
+                }}
+                onPress={() => setShowSelectBoard(!showSelectBoard)}
+              >
+                <Text
+                  style={{
+                    color: "#EAE0D5",
+                    fontWeight: "bold",
+                    fontSize: normalize(16),
+                  }}
+                >
+                  {showSelectBoard ? "Hide Select Board" : "Select Board"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  borderRadius: 10,
+                }}
+                onPress={() => {
+                  setShowControls(!showControls);
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#EAE0D5",
+                    fontWeight: "bold",
+                    fontSize: normalize(16),
+                  }}
+                >
+                  {showControls ? "Hide Controls" : "Controls"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {showSelectBoard && boards.length > 0 && (
+              <View
+                style={{
+                  marginBottom: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: normalize(16),
+                    fontWeight: "bold",
+                    color: "#EAE0D5",
+                    marginBottom: 10,
+                  }}
+                >
+                  Select Board:
+                </Text>
+                <ScrollView
+                  horizontal
+                  contentContainerStyle={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                  showsHorizontalScrollIndicator={false}
+                >
+                  {boards.map((board) => (
+                    <TouchableOpacity
+                      key={board.id}
+                      style={[
+                        {
+                          backgroundColor: "#C89F9C",
+                          paddingVertical: 10,
+                          paddingHorizontal: 15,
+                          borderRadius: 10,
+                          marginRight: 10,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        },
+                        currentBoard &&
+                          currentBoard.id === board.id && {
+                            backgroundColor: "#5A9F5A",
+                          },
+                      ]}
+                      onPress={() => switchBoard(board.id)}
+                    >
+                      <Text
+                        style={{
+                          fontSize: normalize(16),
+                          color: "#EAE0D5",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {board.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {showControls && (
+              <View>
+                <Text
+                  style={{
+                    fontSize: normalize(16),
+                    fontWeight: "bold",
+                    color: "#EAE0D5",
+                    marginBottom: 10,
+                  }}
+                >
+                  Controls:
+                </Text>
+                <ScrollView
+                  horizontal
+                  style={{
+                    backgroundColor: "#A57878",
+                    borderRadius: 5,
+                    paddingTop: 10,
+                    marginBottom: 10,
+                  }}
+                  contentContainerStyle={{
+                    flexDirection: "row",
+                    marginBottom: 10,
+                  }}
+                >
+                  <CreateBoardItem />
+                  <TouchableOpacity
+                    style={{
+                      paddingVertical: 5,
+                      paddingHorizontal: 12,
+                      borderRadius: 10,
+                      marginRight: 10,
+                      alignItems: "center",
+                    }}
+                    onPress={() => setShowCreateBoard(!showCreateBoard)}
+                  >
+                    <Text
+                      style={{
+                        color: "#EAE0D5",
+                        fontWeight: "bold",
+                        fontSize: normalize(16),
+                      }}
+                    >
+                      Add Board
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      paddingVertical: 5,
+                      paddingHorizontal: 12,
+                      borderRadius: 10,
+                      marginRight: 10,
+                      alignItems: "center",
+                    }}
+                    onPress={() => setShowRenameBoard(!showRenameBoard)}
+                  >
+                    <Text
+                      style={{
+                        color: "#EAE0D5",
+                        fontWeight: "bold",
+                        fontSize: normalize(16),
+                      }}
+                    >
+                      Rename Board
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      paddingVertical: 5,
+                      paddingHorizontal: 12,
+                      borderRadius: 10,
+                      marginRight: 10,
+                      alignItems: "center",
+                      backgroundColor: "#D9534F",
+                    }}
+                    onPress={handleDeleteBoard}
+                  >
+                    <Text
+                      style={{
+                        color: "#EAE0D5",
+                        fontWeight: "bold",
+                        fontSize: normalize(16),
+                      }}
+                    >
+                      Delete Board
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            )}
+
+            {showCreateBoard && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 20,
+                }}
+              >
+                <TextInput
+                  placeholder="New Board Name"
+                  value={newBoardName}
+                  onChangeText={setNewBoardName}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#A57878",
+                    height: "100%",
+                    borderRadius: 5,
+                    marginRight: 10,
+                  }}
+                  placeholderTextColor="#EAE0D580"
+                />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#A57878",
+                    paddingVertical: 10,
+                    paddingHorizontal: 15,
+                    borderRadius: 5,
+                  }}
+                  onPress={handleCreateBoard}
+                >
+                  <Text
+                    style={{
+                      color: "#EAE0D5",
+                      fontWeight: "bold",
+                      fontSize: normalize(16),
+                    }}
+                  >
+                    Create
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {showRenameBoard && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 20,
+                }}
+              >
+                <TextInput
+                  placeholder="Rename Board"
+                  value={renameBoardName}
+                  onChangeText={setRenameBoardName}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#A57878",
+                    height: "100%",
+                    borderRadius: 5,
+                    marginRight: 10,
+                  }}
+                  placeholderTextColor="#EAE0D580"
+                />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#A57878",
+                    paddingVertical: 10,
+                    paddingHorizontal: 15,
+                    borderRadius: 5,
+                  }}
+                  onPress={handleRenameBoard}
+                >
+                  <Text
+                    style={{
+                      color: "#EAE0D5",
+                      fontWeight: "bold",
+                      fontSize: normalize(16),
+                    }}
+                  >
+                    Rename
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View
               style={{
                 flexDirection: "row",
@@ -213,18 +410,56 @@ const Board = ({ navigation }) => {
                 flexWrap: "wrap",
               }}
             >
-              <Text style={styles.boardNameText}>
+              <Text
+                style={{
+                  fontSize: isLandscape ? normalize(10) : normalize(15),
+                  color: "#EAE0D5",
+                  textAlign: "left",
+                }}
+              >
                 Board Selected: {currentBoard.name}
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.stopAllButton}
-              onPress={stopAllSounds}
-            >
-              <Text style={styles.stopAllText}>Stop All Sounds</Text>
-            </TouchableOpacity>
 
-            <View style={styles.scrollContainer}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginTop: 5,
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#D9534F",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: "60%",
+                }}
+                onPress={stopAllSounds}
+              >
+                <Text
+                  style={{
+                    color: "#EAE0D5",
+                    fontWeight: "bold",
+                    fontSize: normalize(16),
+                  }}
+                >
+                  Stop All Sounds
+                </Text>
+              </TouchableOpacity>
+              <RecordAudioButton />
+            </View>
+            <View
+              style={{
+                flexGrow: 1,
+                flexDirection: "row",
+                flexWrap: "wrap",
+                justifyContent: "space-evenly",
+              }}
+            >
               {currentBoard.sounds.map((item, index) => (
                 <BoardItem
                   key={index}
@@ -246,135 +481,3 @@ const Board = ({ navigation }) => {
 };
 
 export default Board;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#5E403F",
-    paddingTop: 35,
-    paddingBottom: 20,
-    paddingHorizontal: 5,
-  },
-  titleContainer: {
-    marginBottom: 10,
-  },
-  titleText: {
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(35),
-    fontWeight: "bold",
-    color: "#EAE0D5",
-  },
-  boardNameText: {
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(15),
-    color: "#EAE0D5",
-    textAlign: "left",
-  },
-  toggleButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  toggleButton: {
-    borderRadius: 10,
-  },
-  toggleButtonText: {
-    color: "#EAE0D5",
-    fontWeight: "bold",
-    fontSize: isLandscape() && isTablet() ? normalize(8) : normalize(16),
-  },
-  boardSelector: {
-    marginBottom: 20,
-  },
-  selectBoardText: {
-    fontSize: isLandscape() && isTablet() ? normalize(8) : normalize(16),
-    fontWeight: "bold",
-    color: "#EAE0D5",
-    marginBottom: 10,
-  },
-  boardList: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  boardButton: {
-    backgroundColor: "#C89F9C",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginRight: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  activeBoard: {
-    backgroundColor: "#5A9F5A",
-  },
-  boardButtonText: {
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
-    color: "#EAE0D5",
-    fontWeight: "bold",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    marginBottom: 10,
-  },
-  controlButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginRight: 10,
-    alignItems: "center",
-  },
-  controlButtonText: {
-    color: "#EAE0D5",
-    fontWeight: "bold",
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
-  },
-  deleteBoardButton: {
-    backgroundColor: "#D9534F",
-  },
-  stopAllButton: {
-    backgroundColor: "#D9534F",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 3,
-  },
-  stopAllText: {
-    color: "#EAE0D5",
-    fontWeight: "bold",
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
-  },
-  newBoardContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#A57878",
-    height: "100%",
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  createBoardButton: {
-    backgroundColor: "#A57878",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
-  createBoardText: {
-    color: "#EAE0D5",
-    fontWeight: "bold",
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
-  },
-  boardArea: {
-    flex: 1,
-    backgroundColor: "#5E403F",
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-evenly",
-  },
-});

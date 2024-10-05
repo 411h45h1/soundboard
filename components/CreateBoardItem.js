@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { StyleSheet, TouchableOpacity, Text } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { isLandscape, isTablet, normalize } from "../core/responsive";
+import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 
 const CreateBoardItem = () => {
@@ -26,7 +26,15 @@ const CreateBoardItem = () => {
 
   return (
     <TouchableOpacity style={styles.container} onPress={pickAudio}>
-      <Text style={styles.text}>Add Sound</Text>
+      <Text
+        style={{
+          color: "#EAE0D5",
+          fontWeight: "bold",
+          fontSize: normalize(16),
+        }}
+      >
+        Add Sound
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -37,14 +45,8 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 10,
     justifyContent: "center",
-    borderRadius: 10,
     alignItems: "center",
     paddingHorizontal: 10,
     marginRight: 10,
-  },
-  text: {
-    color: "#EAE0D5",
-    fontWeight: "bold",
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(16),
   },
 });

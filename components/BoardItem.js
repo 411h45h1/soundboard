@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {
-  Dimensions,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import { Audio } from "expo-av";
-import { isLandscape, isTablet, normalize } from "../core/responsive";
+import { useIsLandscape, isTablet, normalize } from "../core/responsive";
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,6 +16,7 @@ const BoardItem = ({
 }) => {
   const [sound, setSound] = useState(null);
   const [showActions, setShowActions] = useState(false);
+  const isLandscape = useIsLandscape(); // Get current orientation dynamically
 
   const playSound = async () => {
     try {
@@ -57,11 +51,33 @@ const BoardItem = ({
   };
 
   return (
-    <View style={styles.cont}>
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        alignSelf: "center",
+        marginVertical: 15,
+        width: isTablet() ? normalize(100) : normalize(125),
+      }}
+    >
       {showActions && (
-        <View style={styles.actionMenu}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            width: "100%",
+            marginBottom: 5,
+          }}
+        >
           <TouchableOpacity
-            style={styles.editButton}
+            style={{
+              backgroundColor: "#646F4B",
+              padding: 5,
+              borderRadius: 5,
+              marginHorizontal: 5,
+              flex: 1,
+              alignItems: "center",
+            }}
             onPress={() => {
               navigation.navigate("Edit", {
                 sid,
@@ -71,30 +87,82 @@ const BoardItem = ({
               setShowActions(false);
             }}
           >
-            <Text style={styles.actionText}>Edit</Text>
+            <Text
+              style={{
+                color: "white",
+                fontWeight: "bold",
+              }}
+            >
+              Edit
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.deleteButton}
+            style={{
+              backgroundColor: "tomato",
+              padding: 5,
+              borderRadius: 5,
+              marginHorizontal: 5,
+              flex: 1,
+              alignItems: "center",
+            }}
             onPress={() => {
               removeSoundboardItem(sid);
               setShowActions(false);
             }}
           >
-            <Text style={styles.actionText}>Delete</Text>
+            <Text
+              style={{
+                color: "white",
+                fontWeight: "bold",
+              }}
+            >
+              Delete
+            </Text>
           </TouchableOpacity>
         </View>
       )}
 
       <TouchableOpacity
-        style={styles.soundButton}
+        style={{
+          height: isTablet() ? height * 0.2 : height * 0.1,
+          width: isTablet() ? width * 0.3 : width * 0.4,
+          backgroundColor: "#A57878",
+          borderRadius: 10,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
         onPress={playSound}
         onLongPress={handleLongPress}
       >
         {title ? (
-          <Text style={styles.soundBoardText}>{title}</Text>
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#EAE0D5",
+              width: "100%",
+              textAlign: "center",
+              flexWrap: "wrap",
+              fontSize:
+                isLandscape && isTablet() ? normalize(10) : normalize(15),
+            }}
+          >
+            {title}
+          </Text>
         ) : (
-          <Text style={styles.soundBoardText}>File: {name}</Text>
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: "#EAE0D5",
+              width: "100%",
+              textAlign: "center",
+              flexWrap: "wrap",
+              fontSize:
+                isLandscape && isTablet() ? normalize(10) : normalize(15),
+            }}
+          >
+            File: {name}
+          </Text>
         )}
       </TouchableOpacity>
     </View>
@@ -102,55 +170,3 @@ const BoardItem = ({
 };
 
 export default BoardItem;
-
-const styles = StyleSheet.create({
-  cont: {
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    marginVertical: 15,
-    width: isTablet() ? normalize(100) : normalize(125),
-  },
-  soundButton: {
-    height: isTablet() ? height * 0.2 : height * 0.1,
-    width: isTablet() ? width * 0.3 : width * 0.4,
-    backgroundColor: "#A57878",
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  soundBoardText: {
-    fontWeight: "bold",
-    color: "#EAE0D5",
-    width: "100%",
-    textAlign: "center",
-    marginVertical: 25,
-    fontSize: isLandscape() && isTablet() ? normalize(10) : normalize(15),
-  },
-  actionMenu: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginBottom: 5,
-  },
-  editButton: {
-    backgroundColor: "#646F4B",
-    padding: 5,
-    borderRadius: 5,
-    marginHorizontal: 5,
-    flex: 1,
-    alignItems: "center",
-  },
-  deleteButton: {
-    backgroundColor: "tomato",
-    padding: 5,
-    borderRadius: 5,
-    marginHorizontal: 5,
-    flex: 1,
-    alignItems: "center",
-  },
-  actionText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-});

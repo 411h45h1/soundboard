@@ -2,13 +2,13 @@
   "expo": {
     "name": "SoundBoard",
     "slug": "SoundBoard",
-    "version": "1.1.3",
+    "version": "1.1.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#5E403F"
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
@@ -19,17 +19,20 @@
       "bundleIdentifier": "com.ourends.soundboard",
       "buildNumber": "1",
       "supportsTablet": true,
+      "backgroundColor": "#5E403F",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": ["audio"],
+        "NSMicrophoneUsageDescription": "This app requires access to the microphone to record audio."
       }
     },
     "android": {
-      "permissions": [],
+      "permissions": ["RECORD_AUDIO"],
       "package": "com.ourends.soundboard",
       "versionCode": 7,
+      "backgroundColor": "#5E403F",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#5E403F"
       }
     },
     "web": {

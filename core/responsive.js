@@ -1,5 +1,7 @@
 import { Dimensions, Platform, PixelRatio } from "react-native";
+import { useEffect, useState } from "react";
 
+// Get the initial screen dimensions
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const baseWidth = 320;
@@ -40,31 +42,50 @@ export const font = (style) => {
 };
 
 /**
- * Check if the device is considered a large screen (tablet)
- * @returns {boolean} - True if device is a tablet
- */
-export const isLargeScreen = SCREEN_WIDTH >= 768;
-
-/**
- * Get screen dimensions
+ * Get screen dimensions dynamically
  * @returns {object} - Object containing screen width and height
  */
-export const getScreenDimensions = () => ({
-  width: SCREEN_WIDTH,
-  height: SCREEN_HEIGHT,
-});
+export const getScreenDimensions = () => Dimensions.get("window");
 
 /**
- * Check if the device is in landscape mode
+ * Check if the device is in landscape mode dynamically
  * @returns {boolean} - True if the device is in landscape mode
  */
-export const isLandscape = () => SCREEN_WIDTH > SCREEN_HEIGHT;
+export const isLandscape = () => {
+  const { width, height } = Dimensions.get("window");
+  return width > height;
+};
+
+/**
+ * Custom hook to track the orientation and respond to screen changes
+ * @returns {boolean} - True if the device is in landscape mode
+ */
+export const useIsLandscape = () => {
+  const [landscape, setLandscape] = useState(isLandscape());
+
+  useEffect(() => {
+    const onChange = ({ window: { width, height } }) => {
+      setLandscape(width > height);
+    };
+
+    // Listen to changes in dimensions
+    const subscription = Dimensions.addEventListener("change", onChange);
+
+    return () => {
+      // Clean up the event listener
+      subscription?.remove();
+    };
+  }, []);
+
+  return landscape;
+};
 
 /**
  * Check if the device is a tablet
  * @returns {boolean} - True if the device is a tablet (based on screen size)
  */
 export const isTablet = () => {
-  const aspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH;
-  return isLargeScreen && aspectRatio < 1.6; // Typical tablet aspect ratio is around 1.33 (4:3)
+  const { width, height } = Dimensions.get("window");
+  const aspectRatio = height / width;
+  return width >= 768 && aspectRatio < 1.6; // Typical tablet aspect ratio is around 1.33 (4:3)
 };

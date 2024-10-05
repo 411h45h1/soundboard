@@ -1,8 +1,6 @@
 import React, { useContext, useState } from "react";
 import {
   Keyboard,
-  Platform,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -27,28 +25,76 @@ const EditBoard = ({ navigation, route }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Edit sound</Text>
+      <View
+        style={{ flex: 1, backgroundColor: "#5E403F", paddingHorizontal: 10 }}
+      >
+        <View style={{ marginBottom: 20 }}>
+          <Text
+            style={{
+              fontSize: normalize(35),
+              fontWeight: "bold",
+              color: "white",
+            }}
+          >
+            Edit sound
+          </Text>
         </View>
 
-        <View style={styles.content}>
+        <View
+          style={{
+            backgroundColor: "#A57878",
+            borderRadius: 10,
+            padding: 20,
+          }}
+        >
           <TouchableOpacity
-            style={styles.goBackButton}
+            style={{ alignSelf: "flex-start", marginBottom: 20 }}
             onPress={navigation.goBack}
           >
             <AntDesign name="back" size={normalize(20)} />
           </TouchableOpacity>
 
-          <View style={styles.infoSection}>
-            <Text style={styles.label}>File Name:</Text>
-            <Text style={styles.value}>{fileName}</Text>
+          <View style={{ marginBottom: 20 }}>
+            <Text
+              style={{
+                fontSize: normalize(16),
+                fontWeight: "bold",
+                color: "#EAE0D5",
+                marginBottom: 5,
+              }}
+            >
+              File Name:
+            </Text>
+            <Text
+              style={{
+                fontSize: normalize(16),
+                color: "#EAE0D5",
+              }}
+            >
+              {fileName}
+            </Text>
           </View>
 
-          <View style={styles.inputSection}>
-            <Text style={styles.label}>Title:</Text>
+          <View style={{ marginBottom: 30 }}>
+            <Text
+              style={{
+                fontSize: normalize(16),
+                fontWeight: "bold",
+                color: "#EAE0D5",
+                marginBottom: 5,
+              }}
+            >
+              Title:
+            </Text>
             <TextInput
-              style={styles.input}
+              style={{
+                backgroundColor: "#5E403F",
+                borderRadius: 5,
+                paddingHorizontal: 10,
+                fontSize: normalize(16),
+                height: 40,
+                color: "#EAE0D5",
+              }}
               onChangeText={setTitleText}
               value={titleText}
               placeholder="Enter title"
@@ -56,8 +102,24 @@ const EditBoard = ({ navigation, route }) => {
             />
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Submit</Text>
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#646F4B",
+              paddingVertical: 12,
+              borderRadius: 5,
+              alignItems: "center",
+            }}
+            onPress={handleSubmit}
+          >
+            <Text
+              style={{
+                color: "#EAE0D5",
+                fontSize: normalize(18),
+                fontWeight: "bold",
+              }}
+            >
+              Submit
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -66,64 +128,3 @@ const EditBoard = ({ navigation, route }) => {
 };
 
 export default EditBoard;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#5E403F",
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    paddingHorizontal: 10,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  headerText: {
-    fontSize: normalize(35),
-    fontWeight: "bold",
-    color: "white",
-  },
-  content: {
-    backgroundColor: "#A57878",
-    borderRadius: 10,
-    padding: 20,
-  },
-  goBackButton: {
-    alignSelf: "flex-start",
-    marginBottom: 20,
-  },
-  infoSection: {
-    marginBottom: 20,
-  },
-  inputSection: {
-    marginBottom: 30,
-  },
-  label: {
-    fontSize: normalize(16),
-    fontWeight: "bold",
-    color: "#EAE0D5",
-    marginBottom: 5,
-  },
-  value: {
-    fontSize: normalize(16),
-    color: "#EAE0D5",
-  },
-  input: {
-    backgroundColor: "#5E403F",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    fontSize: normalize(16),
-    height: 40,
-    color: "#EAE0D5",
-  },
-  submitButton: {
-    backgroundColor: "#646F4B",
-    paddingVertical: 12,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  submitButtonText: {
-    color: "#EAE0D5",
-    fontSize: normalize(18),
-    fontWeight: "bold",
-  },
-});

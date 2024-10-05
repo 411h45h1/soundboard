@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, SafeAreaView } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 
@@ -91,7 +91,7 @@ export default function App() {
       <AppState>
         <StatusBar animated={true} style="light" />
 
-        <View style={styles.container} onLayout={onLayoutRootView}>
+        <SafeAreaView style={styles.container} onLayout={onLayoutRootView}>
           <Stack.Navigator
             screenOptions={{ headerShown: false }}
             initialRouteName="Home"
@@ -99,7 +99,7 @@ export default function App() {
             <Stack.Screen name="Home" component={Board} />
             <Stack.Screen name="Edit" component={EditBoard} />
           </Stack.Navigator>
-        </View>
+        </SafeAreaView>
       </AppState>
     </NavigationContainer>
   );
