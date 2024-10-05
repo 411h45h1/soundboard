@@ -33,8 +33,6 @@ const Board = ({ navigation }) => {
   const playingSounds = useRef([]);
   const isLandscape = useIsLandscape();
 
-  console.log("isLandscape", isLandscape);
-
   const stopAllSounds = async () => {
     if (playingSounds.current.length > 0) {
       await Promise.all(
