@@ -1,6 +1,6 @@
 {
   "main": "node_modules/expo/AppEntry.js",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "scripts": {
     "ghd": "yarn clean && yarn",
     "start": "expo start",

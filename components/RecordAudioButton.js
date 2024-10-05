@@ -82,6 +82,11 @@ const RecordAudioButton = () => {
       const uri = recording.getURI();
       console.log("Recording stopped and stored at", uri);
 
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+      });
+
       const soundObj = {
         sid: Date.now(),
         uri,

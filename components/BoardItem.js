@@ -125,7 +125,7 @@ const BoardItem = ({
 
       <TouchableOpacity
         style={{
-          height: isTablet() ? height * 0.2 : height * 0.1,
+          minHeight: isTablet() ? height * 0.2 : height * 0.1,
           width: isTablet() ? width * 0.3 : width * 0.4,
           backgroundColor: "#A57878",
           borderRadius: 10,
