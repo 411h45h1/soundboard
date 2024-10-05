@@ -17,7 +17,6 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.ourends.soundboard",
-      "buildNumber": "1",
       "supportsTablet": true,
       "backgroundColor": "#5E403F",
       "infoPlist": {
