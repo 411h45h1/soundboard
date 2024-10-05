@@ -176,7 +176,6 @@ const AppState = (props) => {
         }
       }
 
-      // Update defaultSoundsRemoved flag if necessary
       const defaultSoundNames = [
         "crash_notso_software.mp3",
         "ding_notso_software.mp3",

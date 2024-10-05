@@ -16,7 +16,7 @@ const BoardItem = ({
 }) => {
   const [sound, setSound] = useState(null);
   const [showActions, setShowActions] = useState(false);
-  const isLandscape = useIsLandscape(); // Get current orientation dynamically
+  const isLandscape = useIsLandscape();
 
   const playSound = async () => {
     try {

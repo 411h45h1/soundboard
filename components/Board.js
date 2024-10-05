@@ -31,7 +31,7 @@ const Board = ({ navigation }) => {
   const [showControls, setShowControls] = useState(true);
   const [showSelectBoard, setShowSelectBoard] = useState(false);
   const playingSounds = useRef([]);
-  const isLandscape = useIsLandscape(); // Detect orientation
+  const isLandscape = useIsLandscape();
 
   console.log("isLandscape", isLandscape);
 
