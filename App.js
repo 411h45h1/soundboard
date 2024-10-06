@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, SafeAreaView } from "react-native";
+import { StyleSheet, SafeAreaView, StatusBar } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
 
 import Board from "./components/Board";
 import EditBoard from "./components/EditBoard";
