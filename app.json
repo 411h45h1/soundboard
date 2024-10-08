@@ -27,7 +27,6 @@
     "android": {
       "permissions": ["RECORD_AUDIO"],
       "package": "com.notso_software.soundboard",
-      "versionCode": 2,
       "backgroundColor": "#5E403F",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
