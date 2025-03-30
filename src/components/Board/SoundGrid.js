@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     paddingTop: 10,
     paddingHorizontal: 5,
+    justifyContent: "space-evenly",
   },
   itemContainer: {
     paddingHorizontal: 5,
