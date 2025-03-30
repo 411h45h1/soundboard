@@ -51,7 +51,9 @@ export default function App() {
   useEffect(() => {
     const prepareApp = async () => {
       try {
-        await SplashScreen.preventAutoHideAsync();
+        await SplashScreen.preventAutoHideAsync().catch(() => {
+          /* Ignore errors */
+        });
 
         if (!__DEV__) {
           await checkForUpdates();

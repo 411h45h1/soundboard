@@ -13,7 +13,25 @@ const scale = SCREEN_WIDTH / baseWidth;
  * @returns {number} - Normalized size based on screen width
  */
 export const normalize = (size) => {
-  const newSize = size * scale;
+  // Check if device is a tablet
+  const isTabletDevice = isTablet();
+
+  // Use a different scale factor for tablets
+  let scaleFactor = scale;
+
+  if (isTabletDevice) {
+    // On tablets, use a more conservative scaling approach
+    // This prevents text from becoming too large
+    const tabletScale = Math.min(scale, 1.5);
+
+    // Apply a reduction factor based on screen size
+    // Larger screens get a lower scaling factor
+    const reductionFactor = SCREEN_WIDTH > 1000 ? 0.7 : 0.85;
+
+    scaleFactor = tabletScale * reductionFactor;
+  }
+
+  const newSize = size * scaleFactor;
 
   // Differentiate between iOS and Android scaling behavior
   if (Platform.OS === "ios") {

@@ -6,6 +6,7 @@
     "reinstall:start": "yarn ghd && yarn start",
     "ghd": "yarn clean && yarn",
     "start": "expo start --dev-client",
+    "start:c": "expo start -c --dev-client",
     "clean": "rimraf .expo .expo-shared node_modules yarn.lock",
     "android": "expo start --android",
     "ios": "expo start --ios",
