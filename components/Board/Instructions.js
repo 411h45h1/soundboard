@@ -1,13 +1,7 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Pressable,
-} from "react-native";
+import { Text, TouchableOpacity, ScrollView, Pressable } from "react-native";
 import { normalize } from "../../core/responsive";
-import { withHaptics } from "../../src/utils/haptics";
+import { withHaptics } from "../../utils/haptics";
 
 const Instructions = ({ setShowInstructions }) => {
   return (

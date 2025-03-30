@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import { useIsLandscape, isTablet, normalize } from "../../core/responsive";
-import { validateSound } from "../../src/utils/SoundManager";
-import { triggerHaptic, withHaptics } from "../../src/utils/haptics";
+import { validateSound } from "../../utils/SoundManager";
+import { triggerHaptic, withHaptics } from "../../utils/haptics";
 
 const BoardItem = ({
   sid,

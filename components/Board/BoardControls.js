@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { normalize } from "../../core/responsive";
-import { withHaptics } from "../../src/utils/haptics";
+import { withHaptics } from "../../utils/haptics";
 import CreateBoardItem from "../CreateBoardItem";
 
 const BoardControls = ({

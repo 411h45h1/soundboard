@@ -4,7 +4,7 @@ import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
 import { AppContext } from "../core/context/AppState";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useIsLandscape, isTablet, normalize } from "../core/responsive";
-import { triggerHaptic } from "../src/utils/haptics";
+import { triggerHaptic } from "../utils/haptics";
 
 const RecordAudioButton = () => {
   const [recording, setRecording] = useState(null);

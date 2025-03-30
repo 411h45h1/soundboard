@@ -10,7 +10,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import * as Updates from "expo-updates";
 import { AppState } from "./core/context/AppState";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
-import SoundManager from "./src/utils/SoundManager";
+import SoundManager from "./utils/SoundManager";
 import * as FileSystem from "expo-file-system";
 
 const checkForUpdates = async () => {

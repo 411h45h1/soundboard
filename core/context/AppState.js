@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
-import SoundManager from "../../src/utils/SoundManager";
+import SoundManager from "../../utils/SoundManager";
 
 const AppContext = React.createContext();
 

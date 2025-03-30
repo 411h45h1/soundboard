@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TextInput, TouchableOpacity, Text } from "react-native";
 import { normalize } from "../../core/responsive";
-import { triggerHaptic } from "../../src/utils/haptics";
+import { triggerHaptic } from "../../utils/haptics";
 
 const CreateBoardModal = ({
   newBoardName,

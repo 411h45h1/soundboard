@@ -11,7 +11,7 @@ import {
 import { AntDesign } from "@expo/vector-icons";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
-import { triggerHaptic } from "../src/utils/haptics";
+import { triggerHaptic } from "../utils/haptics";
 import { Audio } from "expo-av";
 
 const EditBoard = ({ navigation, route }) => {
