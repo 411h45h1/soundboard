@@ -2,15 +2,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, SafeAreaView, StatusBar } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 
-import Board from "./components/Board";
-import EditBoard from "./components/EditBoard";
+import Board from "./src/components/Board";
+import EditBoard from "./src/components/EditBoard";
 
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import * as Updates from "expo-updates";
-import { AppState } from "./core/context/AppState";
+import { AppState } from "./src/core/context/AppState";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
-import SoundManager from "./utils/SoundManager";
+import SoundManager from "./src/utils/SoundManager";
 import * as FileSystem from "expo-file-system";
 
 const checkForUpdates = async () => {

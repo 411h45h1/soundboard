@@ -9,10 +9,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 import { triggerHaptic } from "../utils/haptics";
 import { Audio } from "expo-av";
+import { normalize } from "../core/responsive";
 
 const EditBoard = ({ navigation, route }) => {
   const { updateBoardItem } = useContext(AppContext);
