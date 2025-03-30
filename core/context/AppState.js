@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
+import SoundManager from "../../src/utils/SoundManager";
 
 const AppContext = React.createContext();
 
@@ -17,8 +18,98 @@ const AppState = (props) => {
       const jsonValue = await AsyncStorage.getItem("soundboards");
       if (jsonValue !== null) {
         const parsedBoards = JSON.parse(jsonValue);
-        setBoards(parsedBoards);
-        if (parsedBoards.length > 0) setCurrentBoard(parsedBoards[0]);
+
+        // First, get all sound metadata to help with recovery
+        const allSoundsMetadata = await SoundManager.getSoundsMetadata();
+
+        // Process boards in sequence to prevent memory issues
+        const validatedBoards = [];
+
+        for (const board of parsedBoards) {
+          const validSounds = [];
+          let processedCount = 0;
+          const totalSounds = board.sounds.length;
+
+          // Process sounds in batches
+          const BATCH_SIZE = 10;
+
+          while (processedCount < totalSounds) {
+            const batch = board.sounds.slice(
+              processedCount,
+              Math.min(processedCount + BATCH_SIZE, totalSounds)
+            );
+
+            for (const sound of batch) {
+              const isValid = await SoundManager.validateSound({
+                uri: sound.uri,
+              });
+
+              if (isValid) {
+                validSounds.push(sound);
+              } else {
+                console.warn(
+                  `Invalid sound detected in board ${board.name}: ${sound.name}`
+                );
+
+                // Try to recover the sound
+                const matchingSound = allSoundsMetadata.find(
+                  (meta) =>
+                    meta.name === sound.name ||
+                    meta.name.includes(
+                      sound.name.replace(/\s+/g, "_").toLowerCase()
+                    )
+                );
+
+                if (matchingSound) {
+                  console.log(
+                    `Recovered sound ${sound.name} with new URI: ${matchingSound.uri}`
+                  );
+
+                  // Create a new sound object with the updated URI but preserve
+                  // the original sound's sid and title to maintain references
+                  const recoveredSound = {
+                    ...sound,
+                    uri: matchingSound.uri,
+                    recovered: true, // Mark as recovered for debugging
+                  };
+
+                  validSounds.push(recoveredSound);
+
+                  // Also save this mapping so it persists
+                  const allExistingSounds =
+                    await SoundManager.getSoundsMetadata();
+                  if (
+                    !allExistingSounds.some((s) => s.id === matchingSound.id)
+                  ) {
+                    await SoundManager.saveSoundsMetadata([
+                      ...allExistingSounds,
+                      matchingSound,
+                    ]);
+                  }
+                } else {
+                  // We couldn't recover this sound, skip it
+                  console.error(`Could not recover sound: ${sound.name}`);
+                }
+              }
+            }
+
+            processedCount += batch.length;
+
+            // Prevent UI from freezing by allowing other tasks to run
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          }
+
+          validatedBoards.push({
+            ...board,
+            sounds: validSounds,
+          });
+        }
+
+        setBoards(validatedBoards);
+        if (validatedBoards.length > 0) setCurrentBoard(validatedBoards[0]);
+
+        // Save the validated boards back to storage
+        await saveBoardsToStorage(validatedBoards);
       } else {
         createDefaultBoard();
       }
@@ -56,20 +147,21 @@ const AppState = (props) => {
         ];
 
         for (const sound of defaultSounds) {
-          const localUri = `${FileSystem.documentDirectory}${sound.name}`;
+          const localUri = `${FileSystem.documentDirectory}sounds/${sound.name}`;
 
-          const fileInfo = await FileSystem.getInfoAsync(localUri);
-          if (!fileInfo.exists) {
-            try {
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(localUri);
+            if (!fileInfo.exists) {
               await FileSystem.downloadAsync(sound.uri, localUri);
-            } catch (error) {
-              console.error(`Error downloading ${sound.name}:`, error);
-              continue;
+              await SoundManager.addSound(localUri, sound.name, "Default");
             }
-          }
 
-          sound.uri = localUri;
-          defaultBoard.sounds.push(sound);
+            sound.uri = localUri;
+            defaultBoard.sounds.push(sound);
+          } catch (error) {
+            console.error(`Error downloading ${sound.name}:`, error);
+            continue;
+          }
         }
       }
 
@@ -105,19 +197,76 @@ const AppState = (props) => {
   );
 
   const updateSoundBoard = useCallback(
-    (soundObj) => {
+    async (soundObj) => {
       if (!currentBoard) return;
 
-      const updatedBoard = {
-        ...currentBoard,
-        sounds: [...currentBoard.sounds, soundObj],
-      };
-      const updatedBoards = boards.map((board) =>
-        board.id === currentBoard.id ? updatedBoard : board
-      );
-      setBoards(updatedBoards);
-      setCurrentBoard(updatedBoard);
-      saveBoardsToStorage(updatedBoards);
+      try {
+        const fileName = soundObj.name;
+        const soundName = soundObj.title || fileName;
+
+        // Start updating the UI immediately - don't wait for the file operation
+        // This creates a more responsive feeling
+        const tempUpdatedBoard = {
+          ...currentBoard,
+          sounds: [
+            ...currentBoard.sounds,
+            {
+              ...soundObj,
+              // Add a temporary flag to indicate this is being processed
+              _processing: true,
+            },
+          ],
+        };
+
+        // Update the UI immediately with the temporary object
+        const tempUpdatedBoards = boards.map((board) =>
+          board.id === currentBoard.id ? tempUpdatedBoard : board
+        );
+
+        setBoards(tempUpdatedBoards);
+        setCurrentBoard(tempUpdatedBoard);
+
+        // Now do the actual file processing
+        if (!soundObj.uri.includes(FileSystem.documentDirectory + "sounds/")) {
+          const soundMeta = await SoundManager.addSound(
+            soundObj.uri,
+            fileName,
+            currentBoard.name
+          );
+
+          soundObj.uri = soundMeta.uri;
+        }
+
+        // Update with the final data (without the processing flag)
+        const finalUpdatedBoard = {
+          ...currentBoard,
+          sounds: [...currentBoard.sounds, soundObj],
+        };
+
+        const finalUpdatedBoards = boards.map((board) =>
+          board.id === currentBoard.id ? finalUpdatedBoard : board
+        );
+
+        setBoards(finalUpdatedBoards);
+        setCurrentBoard(finalUpdatedBoard);
+        saveBoardsToStorage(finalUpdatedBoards);
+      } catch (error) {
+        console.error("Error adding sound to board:", error);
+        // Remove the temporary sound if there was an error
+        if (currentBoard) {
+          const fallbackBoard = {
+            ...currentBoard,
+            sounds: currentBoard.sounds.filter((sound) => !sound._processing),
+          };
+
+          const fallbackBoards = boards.map((board) =>
+            board.id === currentBoard.id ? fallbackBoard : board
+          );
+
+          setBoards(fallbackBoards);
+          setCurrentBoard(fallbackBoard);
+        }
+      }
     },
     [currentBoard, boards, saveBoardsToStorage]
   );
@@ -163,18 +312,6 @@ const AppState = (props) => {
       setBoards(updatedBoards);
       setCurrentBoard(updatedBoard);
       saveBoardsToStorage(updatedBoards);
-
-      if (
-        soundToRemove &&
-        soundToRemove.uri &&
-        soundToRemove.uri.startsWith(FileSystem.documentDirectory)
-      ) {
-        try {
-          await FileSystem.deleteAsync(soundToRemove.uri);
-        } catch (error) {
-          console.error("Error deleting sound file:", error);
-        }
-      }
 
       const defaultSoundNames = [
         "crash_notso_software.mp3",

@@ -1,7 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState, memo, useCallback, useRef } from "react";
+import {
+  Dimensions,
+  Text,
+  TouchableOpacity,
+  View,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { Audio } from "expo-av";
 import { useIsLandscape, isTablet, normalize } from "../core/responsive";
+import { validateSound } from "../src/utils/SoundManager";
+import { triggerHaptic, withHaptics } from "../src/utils/haptics";
 
 const { width, height } = Dimensions.get("window");
 
@@ -16,49 +25,105 @@ const BoardItem = ({
 }) => {
   const [sound, setSound] = useState(null);
   const [showActions, setShowActions] = useState(false);
+  const [isValid, setIsValid] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const isLandscape = useIsLandscape();
-
-  const playSound = async () => {
-    try {
-      console.log("Attempting to play sound. Source URI:", src);
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: src },
-        { shouldPlay: true }
-      );
-      setSound(sound);
-      onPlaySound(sound);
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          console.log("Sound playback finished.");
-          sound.unloadAsync();
-        }
-      });
-    } catch (error) {
-      console.error("Error playing sound:", error);
-    }
-  };
+  const isProcessing = useRef(false);
 
   useEffect(() => {
+    isProcessing.current = src?._processing || false;
+
+    const checkSoundValidity = async () => {
+      try {
+        setIsLoading(true);
+        const valid = await validateSound({ uri: src });
+        setIsValid(valid);
+        setIsLoading(false);
+        console.log(
+          `Sound validation for ${name}: ${valid ? "valid" : "invalid"}`
+        );
+      } catch (error) {
+        console.error(`Error validating sound ${name}:`, error);
+        setIsValid(false);
+        setIsLoading(false);
+      }
+    };
+
+    checkSoundValidity();
+
     return () => {
       if (sound) {
         sound.unloadAsync();
       }
     };
-  }, [sound]);
+  }, [src, name, sound]);
 
-  const handleLongPress = () => {
+  const playSound = useCallback(async () => {
+    triggerHaptic("light");
+    try {
+      console.log("Attempting to play sound. Source URI:", src);
+
+      const valid = await validateSound({ uri: src });
+      if (!valid) {
+        triggerHaptic("error");
+        console.error("Sound file does not exist or is invalid:", src);
+        setIsValid(false);
+        Alert.alert(
+          "Sound Error",
+          "This sound file is missing or corrupted. It may have been deleted or moved.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      if (sound) {
+        await sound.unloadAsync();
+      }
+
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: src },
+        { shouldPlay: true }
+      );
+      setSound(newSound);
+      onPlaySound(newSound);
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          console.log("Sound playback finished.");
+          newSound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      triggerHaptic("error");
+      console.error("Error playing sound:", error);
+      setIsValid(false);
+      Alert.alert(
+        "Playback Error",
+        "Failed to play the sound. The file might be corrupted or missing."
+      );
+    }
+  }, [sound, src, onPlaySound]);
+
+  const handleLongPress = useCallback(() => {
+    triggerHaptic("medium");
     setShowActions((prev) => !prev);
-  };
+  }, []);
 
   return (
     <View
-      style={{
-        alignItems: "center",
-        justifyContent: "center",
-        alignSelf: "center",
-        marginVertical: 15,
-        width: isTablet() ? normalize(100) : normalize(125),
-      }}
+      style={[
+        {
+          alignItems: "center",
+          justifyContent: "center",
+          alignSelf: "center",
+          marginVertical: 15,
+          width: isTablet() ? normalize(100) : normalize(125),
+          opacity: isValid ? 1 : 0.5,
+        },
+        {
+          transform: [{ scale: isLoading ? 0.95 : 1 }],
+          opacity: isLoading ? 0.7 : isValid ? 1 : 0.5,
+        },
+      ]}
     >
       {showActions && (
         <View
@@ -78,14 +143,14 @@ const BoardItem = ({
               flex: 1,
               alignItems: "center",
             }}
-            onPress={() => {
+            onPress={withHaptics("selection", () => {
               navigation.navigate("Edit", {
                 sid,
                 fileName: name,
                 title,
               });
               setShowActions(false);
-            }}
+            })}
           >
             <Text
               style={{
@@ -106,10 +171,10 @@ const BoardItem = ({
               flex: 1,
               alignItems: "center",
             }}
-            onPress={() => {
+            onPress={withHaptics("warning", () => {
               removeSoundboardItem(sid);
               setShowActions(false);
-            }}
+            })}
           >
             <Text
               style={{
@@ -127,15 +192,18 @@ const BoardItem = ({
         style={{
           minHeight: isTablet() ? height * 0.2 : height * 0.1,
           width: isTablet() ? width * 0.3 : width * 0.4,
-          backgroundColor: "#A57878",
+          backgroundColor: isProcessing.current ? "#8A6E6E" : "#A57878",
           borderRadius: 10,
           alignItems: "center",
           justifyContent: "center",
         }}
-        onPress={playSound}
-        onLongPress={handleLongPress}
+        onPress={isLoading ? null : playSound}
+        onLongPress={isLoading ? null : handleLongPress}
+        disabled={isLoading}
       >
-        {title ? (
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#EAE0D5" />
+        ) : title ? (
           <Text
             style={{
               fontWeight: "bold",
@@ -169,4 +237,4 @@ const BoardItem = ({
   );
 };
 
-export default BoardItem;
+export default memo(BoardItem);

@@ -7,6 +7,15 @@ This repository contains a SoundBoard app built using React Native and Expo. Use
 - Create, rename, and delete soundboards.
 - Add and remove sounds from boards.
 - Play and stop sounds.
+- Sounds persist across app updates and restarts.
+
+## Sound Persistence
+
+The app ensures that sounds persist across app updates by:
+
+1. Storing sounds in the app's dedicated sound directory
+2. Maintaining metadata of all sounds in AsyncStorage
+3. Validating sound files on app startup and fixing broken references
 
 ## Prerequisites
 

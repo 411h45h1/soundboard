@@ -1,4 +1,4 @@
-import React, { useContext, useState, useRef } from "react";
+import React, { useContext, useState, useRef, useEffect } from "react";
 import {
   ScrollView,
   Text,
@@ -6,12 +6,15 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import BoardItem from "./BoardItem";
 import CreateBoardItem from "./CreateBoardItem";
 import { useIsLandscape, normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 import RecordAudioButton from "./RecordAudioButton";
+import SoundManager from "../src/utils/SoundManager";
+import { triggerHaptic, withHaptics } from "../src/utils/haptics";
 
 const Board = ({ navigation }) => {
   const {
@@ -30,10 +33,55 @@ const Board = ({ navigation }) => {
   const [showRenameBoard, setShowRenameBoard] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showSelectBoard, setShowSelectBoard] = useState(false);
+  const [isLoadingSounds, setIsLoadingSounds] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const playingSounds = useRef([]);
   const isLandscape = useIsLandscape();
 
+  useEffect(() => {
+    const validateSoundsInBatches = async () => {
+      if (
+        !currentBoard ||
+        !currentBoard.sounds ||
+        currentBoard.sounds.length === 0
+      ) {
+        setInitialLoad(false);
+        return;
+      }
+
+      if (initialLoad) {
+        setIsLoadingSounds(true);
+      }
+
+      const BATCH_SIZE = 10;
+      const totalSounds = currentBoard.sounds.length;
+      let processedSounds = 0;
+
+      while (processedSounds < totalSounds) {
+        const batch = currentBoard.sounds.slice(
+          processedSounds,
+          Math.min(processedSounds + BATCH_SIZE, totalSounds)
+        );
+
+        for (const sound of batch) {
+          await SoundManager.validateSound({ uri: sound.uri });
+        }
+
+        processedSounds += batch.length;
+
+        // Allow UI to update between batches
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+
+      setIsLoadingSounds(false);
+      setInitialLoad(false);
+    };
+
+    validateSoundsInBatches();
+  }, [currentBoard]);
+
   const stopAllSounds = async () => {
+    triggerHaptic("medium");
     if (playingSounds.current.length > 0) {
       await Promise.all(
         playingSounds.current.map((sound) => sound.unloadAsync())
@@ -48,23 +96,30 @@ const Board = ({ navigation }) => {
 
   const handleCreateBoard = () => {
     if (newBoardName.trim()) {
+      triggerHaptic("success");
       createBoard(newBoardName);
       setNewBoardName("");
       setShowCreateBoard(false);
+    } else {
+      triggerHaptic("error");
     }
   };
 
   const handleRenameBoard = () => {
     if (!currentBoard) return;
     if (renameBoardName.trim()) {
+      triggerHaptic("success");
       renameBoard(currentBoard.id, renameBoardName);
       setRenameBoardName("");
       setShowRenameBoard(false);
+    } else {
+      triggerHaptic("error");
     }
   };
 
   const handleDeleteBoard = () => {
     if (!currentBoard) return;
+    triggerHaptic("warning");
     Alert.alert(
       "Delete Board",
       `Are you sure you want to delete the board: ${currentBoard.name}?`,
@@ -73,11 +128,49 @@ const Board = ({ navigation }) => {
         {
           text: "Delete",
           onPress: () => {
+            triggerHaptic("heavy");
             removeBoard(currentBoard.id);
           },
           style: "destructive",
         },
       ]
+    );
+  };
+
+  const renderSoundsGrid = () => {
+    if (isLoadingSounds && initialLoad) {
+      return (
+        <View style={{ padding: 20, alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#EAE0D5" />
+          <Text style={{ color: "#EAE0D5", marginTop: 10 }}>
+            Loading sounds...
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View
+        style={{
+          flexGrow: 1,
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "space-evenly",
+        }}
+      >
+        {currentBoard.sounds.map((item, index) => (
+          <BoardItem
+            key={`${item.sid}-${item.uri}`}
+            navigation={navigation}
+            sid={item.sid}
+            src={item.uri}
+            name={item.name}
+            title={item.title}
+            onPlaySound={handleSoundPlay}
+            removeSoundboardItem={removeSoundboardItem}
+          />
+        ))}
+      </View>
     );
   };
 
@@ -126,7 +219,7 @@ const Board = ({ navigation }) => {
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 20,
+                marginBottom: 10,
               }}
             >
               <TouchableOpacity
@@ -135,7 +228,9 @@ const Board = ({ navigation }) => {
                   backgroundColor: "#A5787850",
                   padding: 7,
                 }}
-                onPress={() => setShowSelectBoard(!showSelectBoard)}
+                onPress={withHaptics("selection", () =>
+                  setShowSelectBoard(!showSelectBoard)
+                )}
               >
                 <Text
                   style={{
@@ -153,9 +248,9 @@ const Board = ({ navigation }) => {
                   backgroundColor: "#A5787850",
                   padding: 7,
                 }}
-                onPress={() => {
+                onPress={withHaptics("selection", () => {
                   setShowControls(!showControls);
-                }}
+                })}
               >
                 <Text
                   style={{
@@ -172,7 +267,7 @@ const Board = ({ navigation }) => {
             {showSelectBoard && boards.length > 0 && (
               <View
                 style={{
-                  marginBottom: 20,
+                  marginBottom: 10,
                 }}
               >
                 <Text
@@ -211,7 +306,9 @@ const Board = ({ navigation }) => {
                             backgroundColor: "#5A9F5A",
                           },
                       ]}
-                      onPress={() => switchBoard(board.id)}
+                      onPress={withHaptics("selection", () =>
+                        switchBoard(board.id)
+                      )}
                     >
                       <Text
                         style={{
@@ -382,6 +479,8 @@ const Board = ({ navigation }) => {
                     height: "100%",
                     borderRadius: 5,
                     marginRight: 10,
+                    paddingLeft: 10,
+                    color: "white",
                   }}
                   placeholderTextColor="#EAE0D580"
                 />
@@ -442,7 +541,7 @@ const Board = ({ navigation }) => {
                   justifyContent: "center",
                   minWidth: "60%",
                 }}
-                onPress={stopAllSounds}
+                onPress={withHaptics("medium", stopAllSounds)}
               >
                 <Text
                   style={{
@@ -456,27 +555,8 @@ const Board = ({ navigation }) => {
               </TouchableOpacity>
               <RecordAudioButton />
             </View>
-            <View
-              style={{
-                flexGrow: 1,
-                flexDirection: "row",
-                flexWrap: "wrap",
-                justifyContent: "space-evenly",
-              }}
-            >
-              {currentBoard.sounds.map((item, index) => (
-                <BoardItem
-                  key={index}
-                  navigation={navigation}
-                  sid={item.sid}
-                  src={item.uri}
-                  name={item.name}
-                  title={item.title}
-                  onPlaySound={handleSoundPlay}
-                  removeSoundboardItem={removeSoundboardItem}
-                />
-              ))}
-            </View>
+
+            {renderSoundsGrid()}
           </ScrollView>
         </View>
       )}

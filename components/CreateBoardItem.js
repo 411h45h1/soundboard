@@ -3,11 +3,13 @@ import { StyleSheet, TouchableOpacity, Text } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
+import { triggerHaptic } from "../src/utils/haptics";
 
 const CreateBoardItem = () => {
   const { updateSoundBoard } = useContext(AppContext);
 
   const pickAudio = async () => {
+    triggerHaptic("selection");
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: [
@@ -23,12 +25,14 @@ const CreateBoardItem = () => {
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
+        triggerHaptic("success");
         const { name, uri } = result.assets[0];
         const id = Date.now() + Math.floor(Math.random() * 9000) + 1000;
 
         updateSoundBoard({ sid: id, name, uri });
       }
     } catch (error) {
+      triggerHaptic("error");
       console.error("Error picking audio file:", error);
     }
   };

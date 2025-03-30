@@ -10,6 +10,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import * as Updates from "expo-updates";
 import { AppState } from "./core/context/AppState";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from "expo-av";
+import SoundManager from "./src/utils/SoundManager";
+import * as FileSystem from "expo-file-system";
 
 const checkForUpdates = async () => {
   try {
@@ -56,6 +58,54 @@ export default function App() {
         }
 
         await configureAudio();
+
+        // Initialize sound system
+        const soundsDir = FileSystem.documentDirectory + "sounds/";
+        const dirInfo = await FileSystem.getInfoAsync(soundsDir);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(soundsDir, {
+            intermediates: true,
+          });
+        }
+
+        // Validate sounds in a non-blocking way after the app loads
+        setTimeout(async () => {
+          try {
+            // Load sounds metadata and validate them
+            const soundsMetadata = await SoundManager.getSoundsMetadata();
+            const validSounds = [];
+
+            // Process in batches to prevent UI freezing
+            const BATCH_SIZE = 10;
+            let processedCount = 0;
+
+            while (processedCount < soundsMetadata.length) {
+              const batch = soundsMetadata.slice(
+                processedCount,
+                Math.min(processedCount + BATCH_SIZE, soundsMetadata.length)
+              );
+
+              for (const sound of batch) {
+                const isValid = await SoundManager.validateSound(sound);
+                if (isValid) {
+                  validSounds.push(sound);
+                }
+              }
+
+              processedCount += batch.length;
+
+              // Allow UI to breathe
+              await new Promise((resolve) => setTimeout(resolve, 0));
+            }
+
+            // Update metadata if needed
+            if (validSounds.length !== soundsMetadata.length) {
+              await SoundManager.saveSoundsMetadata(validSounds);
+            }
+          } catch (error) {
+            console.error("Error validating sounds:", error);
+          }
+        }, 1000); // Delay sound validation to allow UI to initialize first
       } catch (e) {
         console.warn("App initialization error:", e);
       } finally {
@@ -78,7 +128,6 @@ export default function App() {
 
   return (
     <NavigationContainer
-      ac
       theme={{
         ...DefaultTheme,
         colors: {

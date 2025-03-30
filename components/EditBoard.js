@@ -10,6 +10,7 @@ import {
 import { AntDesign } from "@expo/vector-icons";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
+import { triggerHaptic } from "../src/utils/haptics";
 
 const EditBoard = ({ navigation, route }) => {
   const { updateBoardItem } = useContext(AppContext);
@@ -18,8 +19,11 @@ const EditBoard = ({ navigation, route }) => {
 
   const handleSubmit = () => {
     if (titleText.trim()) {
+      triggerHaptic("success");
       updateBoardItem(sid, { title: titleText });
       navigation.goBack();
+    } else {
+      triggerHaptic("error");
     }
   };
 
@@ -52,7 +56,10 @@ const EditBoard = ({ navigation, route }) => {
               alignSelf: "flex-start",
               marginBottom: 20,
             }}
-            onPress={navigation.goBack}
+            onPress={() => {
+              triggerHaptic("selection");
+              navigation.goBack();
+            }}
           >
             <AntDesign name="back" size={normalize(20)} color="white" />
           </TouchableOpacity>
@@ -112,7 +119,10 @@ const EditBoard = ({ navigation, route }) => {
               borderRadius: 5,
               alignItems: "center",
             }}
-            onPress={handleSubmit}
+            onPress={() => {
+              triggerHaptic("medium");
+              handleSubmit();
+            }}
           >
             <Text
               style={{
