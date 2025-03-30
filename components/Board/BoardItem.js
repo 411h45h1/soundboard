@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Audio } from "expo-av";
-import { useIsLandscape, isTablet, normalize } from "../core/responsive";
-import { validateSound } from "../src/utils/SoundManager";
-import { triggerHaptic, withHaptics } from "../src/utils/haptics";
+import { useIsLandscape, isTablet, normalize } from "../../core/responsive";
+import { validateSound } from "../../src/utils/SoundManager";
+import { triggerHaptic, withHaptics } from "../../src/utils/haptics";
 
 const { width, height } = Dimensions.get("window");
 
@@ -205,6 +205,7 @@ const BoardItem = ({
                 sid,
                 fileName: name,
                 title,
+                src,
               });
               setShowActions(false);
             })}

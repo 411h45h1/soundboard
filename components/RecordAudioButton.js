@@ -1,32 +1,10 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
-import {
-  StyleSheet,
-  Text,
-  Pressable,
-  ActivityIndicator,
-  View,
-  Alert,
-} from "react-native";
-import { Audio } from "expo-av";
-import * as Haptics from "expo-haptics";
+import { StyleSheet, Text, Pressable, View, Alert } from "react-native";
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
 import { AppContext } from "../core/context/AppState";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useIsLandscape, isTablet, normalize } from "../core/responsive";
 import { triggerHaptic } from "../src/utils/haptics";
-
-const getDaySuffix = (day) => {
-  if (day > 3 && day < 21) return "th";
-  switch (day % 10) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
-  }
-};
 
 const RecordAudioButton = () => {
   const [recording, setRecording] = useState(null);
@@ -37,6 +15,7 @@ const RecordAudioButton = () => {
   const recordingStartTimeRef = useRef(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const timerRef = useRef(null);
+  const recordingStatusRef = useRef("idle");
 
   const isLandscape = useIsLandscape();
 
@@ -51,21 +30,17 @@ const RecordAudioButton = () => {
 
   const formatRecordingTitle = () => {
     const now = new Date();
-    const day = now.getDate();
-    const daySuffix = getDaySuffix(day);
 
-    const formattedDate = now.toLocaleString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hour12: true,
-    });
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const year = now.getFullYear();
 
-    return `Mic Recording ${formattedDate.replace(day, `${day}${daySuffix}`)}`;
+    const hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const formattedHours = hours % 12 || 12;
+
+    return `Mic Recording ${month}/${day}/${year} @${formattedHours}:${minutes} ${ampm}`;
   };
 
   const startRecording = async () => {
@@ -75,13 +50,16 @@ const RecordAudioButton = () => {
         return;
       }
 
+      recordingStatusRef.current = "initializing";
       triggerHaptic("heavy");
       setIsInitializing(true);
+
       console.log("Requesting audio permission...");
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== "granted") {
         console.error("Permission to access microphone denied");
         setIsInitializing(false);
+        recordingStatusRef.current = "idle";
         return;
       }
 
@@ -89,12 +67,15 @@ const RecordAudioButton = () => {
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
       });
 
       const { recording: newRecording } = await Audio.Recording.createAsync(
         Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
       );
 
+      recordingStatusRef.current = "recording";
       setRecording(newRecording);
       setIsRecording(true);
       setIsInitializing(false);
@@ -112,10 +93,11 @@ const RecordAudioButton = () => {
 
       console.log("Recording started");
     } catch (err) {
-      triggerHaptic("error");
       console.error("Failed to start recording", err);
+      triggerHaptic("error");
       setIsInitializing(false);
       setIsRecording(false);
+      recordingStatusRef.current = "idle";
       Alert.alert(
         "Recording Error",
         "Could not start recording. Please try again."
@@ -124,7 +106,7 @@ const RecordAudioButton = () => {
   };
 
   const stopRecording = async (isUnmounting = false) => {
-    if (isStopping) {
+    if (isStopping || recordingStatusRef.current === "stopping") {
       console.log("Already stopping recording");
       return;
     }
@@ -133,6 +115,7 @@ const RecordAudioButton = () => {
       triggerHaptic("medium");
     }
 
+    recordingStatusRef.current = "stopping";
     setIsStopping(true);
 
     if (timerRef.current) {
@@ -140,37 +123,49 @@ const RecordAudioButton = () => {
       timerRef.current = null;
     }
 
-    if (!recording || !isRecording) {
-      console.log("No active recording to stop");
-      setIsInitializing(false);
-      setIsRecording(false);
-      setIsStopping(false);
+    const duration = recordingStartTimeRef.current
+      ? (Date.now() - recordingStartTimeRef.current) / 1000
+      : 0;
+
+    if (!recording) {
+      console.log("No recording object exists");
+      cleanupAfterRecording();
       return;
     }
 
+    let uri = null;
+
     try {
-      console.log("Stopping recording...");
-      setIsRecording(false);
-
-      const duration = recordingStartTimeRef.current
-        ? (Date.now() - recordingStartTimeRef.current) / 1000
-        : 0;
-
-      let uri = "";
-
       try {
         uri = recording.getURI();
+        console.log("Got recording URI:", uri);
+      } catch (uriError) {
+        console.log("Could not get URI before stopping:", uriError.message);
+      }
+
+      try {
+        console.log("Stopping recording...");
         await recording.stopAndUnloadAsync();
-        console.log("Recording stopped and stored at", uri);
+        console.log("Recording stopped successfully");
       } catch (stopError) {
         console.log("Error stopping recording:", stopError.message);
-        if (stopError.message.includes("already been unloaded")) {
-          try {
-            uri = recording.getURI();
-            console.log("Got URI from already unloaded recording:", uri);
-          } catch (e) {
-            console.error("Could not get URI from recording:", e);
+
+        if (
+          stopError.message.includes("does not exist") ||
+          stopError.message.includes("been unloaded")
+        ) {
+          console.log("Recording was already unloaded or does not exist");
+
+          if (!uri) {
+            try {
+              uri = recording.getURI();
+              console.log("Got URI after failed stop:", uri);
+            } catch (e) {
+              console.error("Could not get URI from recording:", e);
+            }
           }
+        } else {
+          throw stopError;
         }
       }
 
@@ -197,13 +192,38 @@ const RecordAudioButton = () => {
         );
       }
     } catch (error) {
-      triggerHaptic("error");
       console.error("Error in stopping recording process:", error);
+      triggerHaptic("error");
+      if (!isUnmounting) {
+        Alert.alert(
+          "Recording Error",
+          "There was a problem with the recording. Please try again."
+        );
+      }
     } finally {
-      setRecording(null);
-      recordingStartTimeRef.current = null;
-      setIsStopping(false);
+      cleanupAfterRecording();
     }
+  };
+
+  const cleanupAfterRecording = () => {
+    setRecording(null);
+    setIsRecording(false);
+    setIsStopping(false);
+    recordingStartTimeRef.current = null;
+    recordingStatusRef.current = "idle";
+  };
+
+  const renderRecordingTimer = () => {
+    if (!isRecording) return null;
+
+    return (
+      <View style={styles.recordingControls}>
+        <Text style={styles.durationText}>
+          {Math.floor(recordingDuration / 60)}:
+          {(recordingDuration % 60).toString().padStart(2, "0")}
+        </Text>
+      </View>
+    );
   };
 
   return (
@@ -222,6 +242,7 @@ const RecordAudioButton = () => {
         onPress={isRecording ? () => stopRecording(false) : startRecording}
         disabled={isInitializing || isStopping}
       >
+        {renderRecordingTimer()}
         <Text
           style={[
             styles.recordText,
@@ -239,15 +260,6 @@ const RecordAudioButton = () => {
           color={isRecording ? "#FFFFFF" : "#EAE0D5"}
         />
       </Pressable>
-
-      {isRecording && (
-        <View style={styles.recordingControls}>
-          <Text style={styles.durationText}>
-            {Math.floor(recordingDuration / 60)}:
-            {(recordingDuration % 60).toString().padStart(2, "0")}
-          </Text>
-        </View>
-      )}
     </View>
   );
 };
@@ -272,13 +284,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   recordingControls: {
-    position: "absolute",
-    top: "100%",
-    marginTop: 8,
     backgroundColor: "rgba(94, 64, 63, 0.8)",
-    padding: 6,
+    padding: 3,
     borderRadius: 8,
     alignItems: "center",
+    marginRight: 10,
   },
   durationText: {
     color: "#EAE0D5",

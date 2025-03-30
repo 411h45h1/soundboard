@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   Keyboard,
   Text,
@@ -6,16 +6,62 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../core/context/AppState";
 import { triggerHaptic } from "../src/utils/haptics";
+import { Audio } from "expo-av";
 
 const EditBoard = ({ navigation, route }) => {
   const { updateBoardItem } = useContext(AppContext);
-  const { fileName, title, sid } = route.params;
+  const { fileName, title, sid, src } = route.params;
   const [titleText, setTitleText] = useState(title || "");
+  const [duration, setDuration] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSoundAndGetDuration = async () => {
+      try {
+        if (!src) {
+          setLoading(false);
+          return;
+        }
+
+        setLoading(true);
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: src },
+          {},
+          null,
+          false
+        );
+
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) {
+          setDuration(status.durationMillis);
+        }
+
+        await sound.unloadAsync();
+        setLoading(false);
+      } catch (error) {
+        console.error("Error getting audio duration:", error);
+        setLoading(false);
+      }
+    };
+
+    loadSoundAndGetDuration();
+  }, [src]);
+
+  const formatDuration = (milliseconds) => {
+    if (!milliseconds) return "Unknown length";
+
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
 
   const handleSubmit = () => {
     if (titleText.trim()) {
@@ -84,6 +130,43 @@ const EditBoard = ({ navigation, route }) => {
               {fileName}
             </Text>
           </View>
+
+          {loading ? (
+            <View style={{ marginBottom: 20, alignItems: "flex-start" }}>
+              <Text
+                style={{
+                  fontSize: normalize(16),
+                  fontWeight: "bold",
+                  color: "#EAE0D5",
+                  marginBottom: 5,
+                }}
+              >
+                Length:
+              </Text>
+              <ActivityIndicator size="small" color="#EAE0D5" />
+            </View>
+          ) : (
+            <View style={{ marginBottom: 20 }}>
+              <Text
+                style={{
+                  fontSize: normalize(16),
+                  fontWeight: "bold",
+                  color: "#EAE0D5",
+                  marginBottom: 5,
+                }}
+              >
+                Length:
+              </Text>
+              <Text
+                style={{
+                  fontSize: normalize(16),
+                  color: "#EAE0D5",
+                }}
+              >
+                {formatDuration(duration)}
+              </Text>
+            </View>
+          )}
 
           <View style={{ marginBottom: 30 }}>
             <Text
