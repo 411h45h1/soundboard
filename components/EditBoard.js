@@ -48,10 +48,13 @@ const EditBoard = ({ navigation, route }) => {
           }}
         >
           <TouchableOpacity
-            style={{ alignSelf: "flex-start", marginBottom: 20 }}
+            style={{
+              alignSelf: "flex-start",
+              marginBottom: 20,
+            }}
             onPress={navigation.goBack}
           >
-            <AntDesign name="back" size={normalize(20)} />
+            <AntDesign name="back" size={normalize(20)} color="white" />
           </TouchableOpacity>
 
           <View style={{ marginBottom: 20 }}>

@@ -67,7 +67,7 @@ const Board = ({ navigation }) => {
     if (!currentBoard) return;
     Alert.alert(
       "Delete Board",
-      `Are you sure you want to delete the board ${currentBoard.name}?`,
+      `Are you sure you want to delete the board: ${currentBoard.name}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -132,6 +132,8 @@ const Board = ({ navigation }) => {
               <TouchableOpacity
                 style={{
                   borderRadius: 10,
+                  backgroundColor: "#A5787850",
+                  padding: 7,
                 }}
                 onPress={() => setShowSelectBoard(!showSelectBoard)}
               >
@@ -148,6 +150,8 @@ const Board = ({ navigation }) => {
               <TouchableOpacity
                 style={{
                   borderRadius: 10,
+                  backgroundColor: "#A5787850",
+                  padding: 7,
                 }}
                 onPress={() => {
                   setShowControls(!showControls);
@@ -333,6 +337,8 @@ const Board = ({ navigation }) => {
                     height: "100%",
                     borderRadius: 5,
                     marginRight: 10,
+                    paddingLeft: 10,
+                    color: "white",
                   }}
                   placeholderTextColor="#EAE0D580"
                 />

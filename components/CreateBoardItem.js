@@ -10,7 +10,16 @@ const CreateBoardItem = () => {
   const pickAudio = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "audio/mpeg",
+        type: [
+          "audio/*", // Accept all audio types
+          "audio/mpeg", // MP3
+          "audio/wav", // WAV
+          "audio/x-wav", // Alternative WAV MIME type
+          "audio/mp4", // M4A
+          "audio/aac", // AAC
+          "audio/ogg", // OGG
+        ],
+        multiple: false,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
