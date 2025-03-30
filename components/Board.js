@@ -15,6 +15,7 @@ import { AppContext } from "../core/context/AppState";
 import RecordAudioButton from "./RecordAudioButton";
 import SoundManager from "../src/utils/SoundManager";
 import { triggerHaptic, withHaptics } from "../src/utils/haptics";
+import PopupModal from "./PopupModal";
 
 const Board = ({ navigation }) => {
   const {
@@ -35,6 +36,7 @@ const Board = ({ navigation }) => {
   const [showSelectBoard, setShowSelectBoard] = useState(false);
   const [isLoadingSounds, setIsLoadingSounds] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [showInstructions, setShowInstructions] = useState(false);
   const playingSounds = useRef([]);
   const isLandscape = useIsLandscape();
 
@@ -80,18 +82,51 @@ const Board = ({ navigation }) => {
     validateSoundsInBatches();
   }, [currentBoard]);
 
+  // Updated stopAllSounds function to notify all playing components
   const stopAllSounds = async () => {
     triggerHaptic("medium");
+
     if (playingSounds.current.length > 0) {
+      // First stop all sound objects
       await Promise.all(
-        playingSounds.current.map((sound) => sound.unloadAsync())
+        playingSounds.current.map((sound) => {
+          try {
+            return sound.unloadAsync();
+          } catch (error) {
+            console.error("Error stopping sound:", error);
+            return Promise.resolve();
+          }
+        })
       );
+
+      // Now notify all registered components to update their UI
+      if (global.soundBoardRegistry) {
+        Object.values(global.soundBoardRegistry).forEach((listener) => {
+          if (typeof listener === "function") {
+            listener();
+          }
+        });
+      }
+
+      // Clear the playing sounds array
       playingSounds.current = [];
     }
   };
 
+  // This function gets called when a sound is played
   const handleSoundPlay = (sound) => {
-    playingSounds.current.push(sound);
+    // First, check if this sound is already in our array (prevent duplicates)
+    const existingIndex = playingSounds.current.findIndex(
+      (s) => s._boardItemId === sound._boardItemId
+    );
+
+    if (existingIndex !== -1) {
+      // Replace the existing sound with the new one
+      playingSounds.current[existingIndex] = sound;
+    } else {
+      // Add the new sound to the array
+      playingSounds.current.push(sound);
+    }
   };
 
   const handleCreateBoard = () => {
@@ -137,6 +172,99 @@ const Board = ({ navigation }) => {
     );
   };
 
+  const renderInstructions = () => (
+    <View style={{ padding: 10 }}>
+      <Text
+        style={{
+          fontSize: normalize(18),
+          fontWeight: "bold",
+          color: "#EAE0D5",
+          marginBottom: 15,
+          textAlign: "center",
+        }}
+      >
+        How to Use SoundBoard
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Play a sound:</Text> Tap on any
+        sound tile
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Stop a sound:</Text> Tap the
+        sound tile again while it's playing
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Edit a sound:</Text> Long-press
+        on a sound tile, then tap "Edit"
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Delete a sound:</Text> Long-press
+        on a sound tile, then tap "Delete"
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Add a sound:</Text> Tap "Add
+        Sound" in the controls
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Record a sound:</Text> Tap
+        "Record", then tap again to stop recording
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Stop all sounds:</Text> Tap "Stop
+        All Sounds" button
+      </Text>
+
+      <Text
+        style={{ fontSize: normalize(14), color: "#EAE0D5", marginBottom: 10 }}
+      >
+        • <Text style={{ fontWeight: "bold" }}>Switch boards:</Text> Tap "Select
+        Board", then choose a board
+      </Text>
+
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#646F4B",
+          paddingVertical: 12,
+          borderRadius: 8,
+          alignItems: "center",
+          marginTop: 15,
+        }}
+        onPress={withHaptics("selection", () => setShowInstructions(false))}
+      >
+        <Text
+          style={{
+            color: "#EAE0D5",
+            fontWeight: "bold",
+            fontSize: normalize(16),
+          }}
+        >
+          Got it!
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderSoundsGrid = () => {
     if (isLoadingSounds && initialLoad) {
       return (
@@ -156,6 +284,7 @@ const Board = ({ navigation }) => {
           flexDirection: "row",
           flexWrap: "wrap",
           justifyContent: "space-evenly",
+          paddingTop: 10,
         }}
       >
         {currentBoard.sounds.map((item, index) => (
@@ -350,6 +479,28 @@ const Board = ({ navigation }) => {
                     marginBottom: 10,
                   }}
                 >
+                  <TouchableOpacity
+                    style={{
+                      paddingVertical: 5,
+                      paddingHorizontal: 12,
+                      borderRadius: 10,
+                      marginRight: 10,
+                      alignItems: "center",
+                    }}
+                    onPress={withHaptics("selection", () =>
+                      setShowInstructions(true)
+                    )}
+                  >
+                    <Text
+                      style={{
+                        color: "#EAE0D5",
+                        fontWeight: "bold",
+                        fontSize: normalize(16),
+                      }}
+                    >
+                      Instructions
+                    </Text>
+                  </TouchableOpacity>
                   <CreateBoardItem />
                   <TouchableOpacity
                     style={{
@@ -560,6 +711,16 @@ const Board = ({ navigation }) => {
           </ScrollView>
         </View>
       )}
+
+      <PopupModal
+        visible={showInstructions}
+        onClose={() => setShowInstructions(false)}
+        backgroundColor="#5E403F"
+        borderRadius={10}
+        width="90%"
+      >
+        {renderInstructions()}
+      </PopupModal>
     </View>
   );
 };

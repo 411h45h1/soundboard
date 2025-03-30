@@ -25,7 +25,6 @@ export default function SoundPlayer({ soundUri, onPlaybackStatusUpdate }) {
     try {
       console.log("Attempting to play sound. Source URI:", soundUri);
 
-      // Check if the sound file exists
       const valid = await checkSoundValidity();
       if (!valid) {
         console.error("Sound file does not exist or is invalid:", soundUri);
@@ -34,12 +33,10 @@ export default function SoundPlayer({ soundUri, onPlaybackStatusUpdate }) {
         );
       }
 
-      // Unload any existing sound
       if (sound) {
         await sound.unloadAsync();
       }
 
-      // Load and play the sound
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: soundUri },
         { shouldPlay: true },

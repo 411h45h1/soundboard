@@ -27,8 +27,11 @@ const BoardItem = ({
   const [showActions, setShowActions] = useState(false);
   const [isValid, setIsValid] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const isLandscape = useIsLandscape();
   const isProcessing = useRef(false);
+  const hasUnmounted = useRef(false);
+  const componentId = useRef(`board-item-${sid}`).current;
 
   useEffect(() => {
     isProcessing.current = src?._processing || false;
@@ -37,29 +40,73 @@ const BoardItem = ({
       try {
         setIsLoading(true);
         const valid = await validateSound({ uri: src });
-        setIsValid(valid);
-        setIsLoading(false);
-        console.log(
-          `Sound validation for ${name}: ${valid ? "valid" : "invalid"}`
-        );
+        if (!hasUnmounted.current) {
+          setIsValid(valid);
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error(`Error validating sound ${name}:`, error);
-        setIsValid(false);
-        setIsLoading(false);
+        if (!hasUnmounted.current) {
+          setIsValid(false);
+          setIsLoading(false);
+        }
       }
     };
 
     checkSoundValidity();
 
     return () => {
+      hasUnmounted.current = true;
       if (sound) {
         sound.unloadAsync();
       }
     };
-  }, [src, name, sound]);
+  }, [src, name]);
+
+  useEffect(() => {
+    const stopListener = (e) => {
+      if (isPlaying && sound) {
+        setIsPlaying(false);
+      }
+    };
+
+    if (global.soundBoardRegistry) {
+      global.soundBoardRegistry[componentId] = stopListener;
+    } else {
+      global.soundBoardRegistry = {
+        [componentId]: stopListener,
+      };
+    }
+
+    return () => {
+      if (global.soundBoardRegistry) {
+        delete global.soundBoardRegistry[componentId];
+      }
+    };
+  }, [sound, isPlaying]);
+
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
 
   const playSound = useCallback(async () => {
+    if (isPlaying && sound) {
+      triggerHaptic("medium");
+      try {
+        await sound.stopAsync();
+        setIsPlaying(false);
+        return;
+      } catch (error) {
+        console.error("Error stopping sound:", error);
+      }
+    }
+
     triggerHaptic("light");
+
     try {
       console.log("Attempting to play sound. Source URI:", src);
 
@@ -82,26 +129,36 @@ const BoardItem = ({
 
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: src },
-        { shouldPlay: true }
-      );
-      setSound(newSound);
-      onPlaySound(newSound);
-      newSound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          console.log("Sound playback finished.");
-          newSound.unloadAsync();
+        { shouldPlay: true },
+        (status) => {
+          if (hasUnmounted.current) return;
+
+          if (status.isLoaded) {
+            setIsPlaying(status.isPlaying);
+            if (status.didJustFinish) {
+              setIsPlaying(false);
+            }
+          }
         }
-      });
+      );
+
+      setSound(newSound);
+      setIsPlaying(true);
+      onPlaySound(newSound);
+
+      newSound._boardItemId = sid;
+      newSound._componentId = componentId;
     } catch (error) {
       triggerHaptic("error");
       console.error("Error playing sound:", error);
+      setIsPlaying(false);
       setIsValid(false);
       Alert.alert(
         "Playback Error",
         "Failed to play the sound. The file might be corrupted or missing."
       );
     }
-  }, [sound, src, onPlaySound]);
+  }, [sound, src, onPlaySound, isPlaying, sid, componentId]);
 
   const handleLongPress = useCallback(() => {
     triggerHaptic("medium");
@@ -115,7 +172,7 @@ const BoardItem = ({
           alignItems: "center",
           justifyContent: "center",
           alignSelf: "center",
-          marginVertical: 15,
+          marginVertical: 10,
           width: isTablet() ? normalize(100) : normalize(125),
           opacity: isValid ? 1 : 0.5,
         },
@@ -196,6 +253,9 @@ const BoardItem = ({
           borderRadius: 10,
           alignItems: "center",
           justifyContent: "center",
+          padding: 8,
+          borderWidth: 3,
+          borderColor: isPlaying ? "#FFFFFF" : "transparent",
         }}
         onPress={isLoading ? null : playSound}
         onLongPress={isLoading ? null : handleLongPress}
@@ -203,20 +263,6 @@ const BoardItem = ({
       >
         {isLoading ? (
           <ActivityIndicator size="small" color="#EAE0D5" />
-        ) : title ? (
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: "#EAE0D5",
-              width: "100%",
-              textAlign: "center",
-              flexWrap: "wrap",
-              fontSize:
-                isLandscape && isTablet() ? normalize(10) : normalize(15),
-            }}
-          >
-            {title}
-          </Text>
         ) : (
           <Text
             style={{
@@ -225,11 +271,18 @@ const BoardItem = ({
               width: "100%",
               textAlign: "center",
               flexWrap: "wrap",
+              lineHeight: normalize(18),
               fontSize:
-                isLandscape && isTablet() ? normalize(10) : normalize(15),
+                isLandscape && isTablet()
+                  ? normalize(10)
+                  : title && title.length > 15
+                  ? normalize(13)
+                  : normalize(15),
             }}
+            numberOfLines={3}
+            ellipsizeMode="tail"
           >
-            File: {name}
+            {title || `File: ${name}`}
           </Text>
         )}
       </TouchableOpacity>
