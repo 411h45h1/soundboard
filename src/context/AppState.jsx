@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system";
-import SoundManager from "../../utils/SoundManager";
+import { File } from "expo-file-system";
+import SoundManager from "../utils/SoundManager";
 
 const AppContext = React.createContext();
 
@@ -146,17 +146,18 @@ const AppState = (props) => {
           },
         ];
 
+        await SoundManager.ensureSoundsDirectoryExists();
+
         for (const sound of defaultSounds) {
-          const localUri = `${FileSystem.documentDirectory}sounds/${sound.name}`;
+          const localFile = SoundManager.getSoundFileUri(sound.name);
 
           try {
-            const fileInfo = await FileSystem.getInfoAsync(localUri);
-            if (!fileInfo.exists) {
-              await FileSystem.downloadAsync(sound.uri, localUri);
-              await SoundManager.addSound(localUri, sound.name, "Default");
+            if (!localFile.exists) {
+              await File.downloadFileAsync(sound.uri, localFile);
+              await SoundManager.addSound(localFile.uri, sound.name, "Default");
             }
 
-            sound.uri = localUri;
+            sound.uri = localFile.uri;
             defaultBoard.sounds.push(sound);
           } catch (error) {
             console.error(`Error downloading ${sound.name}:`, error);
@@ -227,7 +228,8 @@ const AppState = (props) => {
         setCurrentBoard(tempUpdatedBoard);
 
         // Now do the actual file processing
-        if (!soundObj.uri.includes(FileSystem.documentDirectory + "sounds/")) {
+        const soundsDirectory = SoundManager.getSoundsDirectoryPath();
+        if (!soundObj.uri.startsWith(soundsDirectory.uri)) {
           const soundMeta = await SoundManager.addSound(
             soundObj.uri,
             fileName,

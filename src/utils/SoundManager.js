@@ -1,17 +1,56 @@
-import * as FileSystem from "expo-file-system";
+import { File, Directory, Paths } from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SOUNDS_METADATA_KEY = "SOUNDBOARD_SOUNDS_METADATA";
-const SOUNDS_DIRECTORY = FileSystem.documentDirectory + "sounds/";
+const SOUND_DIRECTORY_NAME = "sounds";
 
-// Ensure the sounds directory exists
-const ensureSoundsDirectory = async () => {
-  const dirInfo = await FileSystem.getInfoAsync(SOUNDS_DIRECTORY);
-  if (!dirInfo.exists) {
-    await FileSystem.makeDirectoryAsync(SOUNDS_DIRECTORY, {
-      intermediates: true,
-    });
+let cachedSoundsDirectory = null;
+
+export const getSoundsDirectoryPath = () => {
+  if (!cachedSoundsDirectory) {
+    cachedSoundsDirectory = new Directory(Paths.document, SOUND_DIRECTORY_NAME);
   }
+  return cachedSoundsDirectory;
+};
+
+export const ensureSoundsDirectoryExists = async () => {
+  const directory = getSoundsDirectoryPath();
+
+  try {
+    directory.create({ intermediates: true });
+    return directory;
+  } catch (error) {
+    // Directory might already exist, which is fine
+    if (!directory.exists) {
+      throw error;
+    }
+    return directory;
+  }
+};
+
+export const getSoundFileUri = (fileName) => {
+  const directory = getSoundsDirectoryPath();
+  return new File(directory, fileName);
+};
+
+const sanitizeFileName = (name) =>
+  name
+    .trim()
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[^a-zA-Z0-9-_]/g, "_")
+    .toLowerCase();
+
+const inferExtensionFromUri = (uri, fallback = "m4a") => {
+  if (!uri) return fallback;
+
+  const sanitized = uri.split("?")[0] ?? uri;
+  const lastSegment = sanitized.split("/").pop() ?? sanitized;
+
+  if (lastSegment.includes(".")) {
+    return lastSegment.split(".").pop();
+  }
+
+  return fallback;
 };
 
 // Get all saved sounds metadata
@@ -65,35 +104,35 @@ export const saveSoundsMetadata = async (metadata) => {
 
 // Add a new sound
 export const addSound = async (uri, name, category, base64Data = null) => {
-  await ensureSoundsDirectory();
+  await ensureSoundsDirectoryExists();
 
-  // Generate a unique ID
   const id = Date.now().toString();
-  const fileExtension = uri.split(".").pop();
-  const fileName = `${name
-    .replace(/\s+/g, "_")
-    .toLowerCase()}_${id}.${fileExtension}`;
-  const destinationUri = SOUNDS_DIRECTORY + fileName;
+  const safeName = sanitizeFileName(name || "sound");
+  const fileExtension = inferExtensionFromUri(name, inferExtensionFromUri(uri));
+  const fileName = `${safeName}_${id}.${fileExtension}`;
+  const destinationFile = getSoundFileUri(fileName);
 
   try {
     // If we have base64 data, write it directly
     if (base64Data) {
-      await FileSystem.writeAsStringAsync(destinationUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      destinationFile.write(base64Data);
     } else {
-      // Otherwise copy the file
-      await FileSystem.copyAsync({
-        from: uri,
-        to: destinationUri,
-      });
+      if (!uri) {
+        throw new Error(
+          "A valid URI or base64 payload is required to add a sound."
+        );
+      }
+
+      // Create a source file instance and copy it
+      const sourceFile = new File(uri);
+      sourceFile.copy(destinationFile);
     }
 
     // Save metadata
     const metadata = {
       id,
       name,
-      uri: destinationUri,
+      uri: destinationFile.uri,
       category,
       dateAdded: new Date().toISOString(),
     };
@@ -114,14 +153,15 @@ export const validateSound = async (soundMetadata) => {
   if (!soundMetadata || !soundMetadata.uri) return false;
 
   try {
-    const fileInfo = await FileSystem.getInfoAsync(soundMetadata.uri);
-    if (!fileInfo.exists) {
+    const file = new File(soundMetadata.uri);
+
+    if (!file.exists) {
       console.log(`Sound file not found at: ${soundMetadata.uri}`);
       return false;
     }
 
     // Additional validation: check file size
-    if (fileInfo.size <= 0) {
+    if (file.size <= 0) {
       console.log(`Sound file exists but has zero size: ${soundMetadata.uri}`);
       return false;
     }
@@ -141,9 +181,9 @@ export const removeSound = async (soundId) => {
 
     if (soundToRemove && soundToRemove.uri) {
       // Delete the actual file
-      const fileInfo = await FileSystem.getInfoAsync(soundToRemove.uri);
-      if (fileInfo.exists) {
-        await FileSystem.deleteAsync(soundToRemove.uri);
+      const file = new File(soundToRemove.uri);
+      if (file.exists) {
+        file.delete();
       }
     }
 
@@ -159,6 +199,9 @@ export const removeSound = async (soundId) => {
 };
 
 export default {
+  ensureSoundsDirectoryExists,
+  getSoundsDirectoryPath,
+  getSoundFileUri,
   getSoundsMetadata,
   getSoundsMetadataPaginated,
   saveSoundsMetadata,

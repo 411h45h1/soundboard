@@ -1,6 +1,13 @@
-import React, { useContext, useState, useRef, useEffect } from "react";
+import React, {
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { View, ScrollView, Alert, ActivityIndicator, Text } from "react-native";
-import { AppContext } from "../../core/context/AppState";
+import { useRouter } from "expo-router";
+import { AppContext } from "../../context/AppState";
 import { useIsLandscape, normalize } from "../../core/responsive";
 import { triggerHaptic } from "../../utils/haptics";
 import SoundManager from "../../utils/SoundManager";
@@ -15,7 +22,8 @@ import CreateBoardModal from "./CreateBoardModal";
 import RenameBoardModal from "./RenameBoardModal";
 import StopAllSoundsButton from "./StopAllSoundsButton";
 
-const Board = ({ navigation }) => {
+const Board = () => {
+  const router = useRouter();
   const {
     currentBoard,
     boards,
@@ -37,6 +45,21 @@ const Board = ({ navigation }) => {
   const [showInstructions, setShowInstructions] = useState(false);
   const playingSounds = useRef([]);
   const isLandscape = useIsLandscape();
+
+  const handleEditSound = useCallback(
+    ({ sid, name, title, src }) => {
+      router.push({
+        pathname: "/edit",
+        params: {
+          sid: String(sid),
+          fileName: name,
+          title: title || "",
+          src,
+        },
+      });
+    },
+    [router]
+  );
 
   useEffect(() => {
     const validateSoundsInBatches = async () => {
@@ -274,8 +297,8 @@ const Board = ({ navigation }) => {
             ) : (
               <SoundGrid
                 sounds={currentBoard.sounds}
-                navigation={navigation}
                 onPlaySound={handleSoundPlay}
+                onEditSound={handleEditSound}
                 removeSoundboardItem={removeSoundboardItem}
               />
             )}

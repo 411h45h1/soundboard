@@ -5,8 +5,8 @@ import { isTablet } from "../../core/responsive";
 
 const SoundGrid = ({
   sounds,
-  navigation,
   onPlaySound,
+  onEditSound,
   removeSoundboardItem,
 }) => {
   // Calculate how many columns based on screen width and device type
@@ -30,12 +30,12 @@ const SoundGrid = ({
           style={[styles.itemContainer, { width: `${100 / numColumns}%` }]}
         >
           <BoardItem
-            navigation={navigation}
             sid={item.sid}
             src={item.uri}
             name={item.name}
             title={item.title}
             onPlaySound={onPlaySound}
+            onEditSound={onEditSound}
             removeSoundboardItem={removeSoundboardItem}
           />
         </View>

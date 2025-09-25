@@ -1,13 +1,17 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
 import { StyleSheet, Text, Pressable, View, Alert } from "react-native";
-import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
-import { AppContext } from "../core/context/AppState";
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  setAudioModeAsync,
+  requestRecordingPermissionsAsync,
+} from "expo-audio";
+import { AppContext } from "../context/AppState";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useIsLandscape, isTablet, normalize } from "../core/responsive";
 import { triggerHaptic } from "../utils/haptics";
 
 const RecordAudioButton = () => {
-  const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
@@ -17,16 +21,18 @@ const RecordAudioButton = () => {
   const timerRef = useRef(null);
   const recordingStatusRef = useRef("idle");
 
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
   const isLandscape = useIsLandscape();
 
   useEffect(() => {
     return () => {
       clearInterval(timerRef.current);
-      if (recording && isRecording) {
+      if (audioRecorder && isRecording) {
         stopRecording(true);
       }
     };
-  }, [recording, isRecording]);
+  }, [audioRecorder, isRecording]);
 
   const formatRecordingTitle = () => {
     const now = new Date();
@@ -55,7 +61,7 @@ const RecordAudioButton = () => {
       setIsInitializing(true);
 
       console.log("Requesting audio permission...");
-      const permission = await Audio.requestPermissionsAsync();
+      const permission = await requestRecordingPermissionsAsync();
       if (permission.status !== "granted") {
         console.error("Permission to access microphone denied");
         setIsInitializing(false);
@@ -64,19 +70,17 @@ const RecordAudioButton = () => {
       }
 
       console.log("Starting recording...");
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+        interruptionMode: "doNotMix",
+        interruptionModeAndroid: "doNotMix",
       });
 
-      const { recording: newRecording } = await Audio.Recording.createAsync(
-        Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-      );
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
 
       recordingStatusRef.current = "recording";
-      setRecording(newRecording);
       setIsRecording(true);
       setIsInitializing(false);
       recordingStartTimeRef.current = Date.now();
@@ -127,7 +131,7 @@ const RecordAudioButton = () => {
       ? (Date.now() - recordingStartTimeRef.current) / 1000
       : 0;
 
-    if (!recording) {
+    if (!audioRecorder) {
       console.log("No recording object exists");
       cleanupAfterRecording();
       return;
@@ -137,7 +141,7 @@ const RecordAudioButton = () => {
 
     try {
       try {
-        uri = recording.getURI();
+        uri = audioRecorder.uri;
         console.log("Got recording URI:", uri);
       } catch (uriError) {
         console.log("Could not get URI before stopping:", uriError.message);
@@ -145,33 +149,16 @@ const RecordAudioButton = () => {
 
       try {
         console.log("Stopping recording...");
-        await recording.stopAndUnloadAsync();
+        await audioRecorder.stop();
         console.log("Recording stopped successfully");
       } catch (stopError) {
         console.log("Error stopping recording:", stopError.message);
-
-        if (
-          stopError.message.includes("does not exist") ||
-          stopError.message.includes("been unloaded")
-        ) {
-          console.log("Recording was already unloaded or does not exist");
-
-          if (!uri) {
-            try {
-              uri = recording.getURI();
-              console.log("Got URI after failed stop:", uri);
-            } catch (e) {
-              console.error("Could not get URI from recording:", e);
-            }
-          }
-        } else {
-          throw stopError;
-        }
+        throw stopError;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: false,
+        playsInSilentMode: true,
       });
 
       if (!isUnmounting && currentBoard && duration >= 0.5 && uri) {
@@ -206,7 +193,6 @@ const RecordAudioButton = () => {
   };
 
   const cleanupAfterRecording = () => {
-    setRecording(null);
     setIsRecording(false);
     setIsStopping(false);
     recordingStartTimeRef.current = null;

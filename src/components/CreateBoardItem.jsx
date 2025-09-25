@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { StyleSheet, TouchableOpacity, Text } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { normalize } from "../core/responsive";
-import { AppContext } from "../core/context/AppState";
+import { AppContext } from "../context/AppState";
 import { triggerHaptic } from "../utils/haptics";
 
 const CreateBoardItem = () => {

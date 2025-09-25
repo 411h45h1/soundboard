@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
 import {
   Keyboard,
   Text,
@@ -9,15 +9,39 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-import { AppContext } from "../core/context/AppState";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { AppContext } from "../context/AppState";
 import { triggerHaptic } from "../utils/haptics";
-import { Audio } from "expo-av";
+import { Audio } from "expo-audio";
 import { normalize } from "../core/responsive";
 
-const EditBoard = ({ navigation, route }) => {
+const getFirstValue = (value, fallback = "") => {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value[0] ?? fallback : fallback;
+  }
+  return value ?? fallback;
+};
+
+const EditBoard = () => {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const { updateBoardItem } = useContext(AppContext);
-  const { fileName, title, sid, src } = route.params;
-  const [titleText, setTitleText] = useState(title || "");
+  const sidParam = useMemo(() => getFirstValue(params.sid, ""), [params.sid]);
+  const sid = useMemo(() => {
+    const numeric = Number(sidParam);
+    return Number.isFinite(numeric) ? numeric : null;
+  }, [sidParam]);
+  const fileName = useMemo(
+    () => getFirstValue(params.fileName, ""),
+    [params.fileName]
+  );
+  const src = useMemo(() => getFirstValue(params.src, ""), [params.src]);
+  const initialTitle = useMemo(
+    () => getFirstValue(params.title, ""),
+    [params.title]
+  );
+
+  const [titleText, setTitleText] = useState(initialTitle);
   const [duration, setDuration] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,6 +77,10 @@ const EditBoard = ({ navigation, route }) => {
     loadSoundAndGetDuration();
   }, [src]);
 
+  useEffect(() => {
+    setTitleText(initialTitle);
+  }, [initialTitle]);
+
   const formatDuration = (milliseconds) => {
     if (!milliseconds) return "Unknown length";
 
@@ -64,10 +92,15 @@ const EditBoard = ({ navigation, route }) => {
   };
 
   const handleSubmit = () => {
+    if (sid == null) {
+      triggerHaptic("error");
+      return;
+    }
+
     if (titleText.trim()) {
       triggerHaptic("success");
       updateBoardItem(sid, { title: titleText });
-      navigation.goBack();
+      router.back();
     } else {
       triggerHaptic("error");
     }
@@ -104,7 +137,7 @@ const EditBoard = ({ navigation, route }) => {
             }}
             onPress={() => {
               triggerHaptic("selection");
-              navigation.goBack();
+              router.back();
             }}
           >
             <AntDesign name="back" size={normalize(20)} color="white" />

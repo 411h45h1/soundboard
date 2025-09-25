@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { Audio } from "expo-av";
+import { Audio } from "expo-audio";
 import { useIsLandscape, isTablet, normalize } from "../../core/responsive";
 import { validateSound } from "../../utils/SoundManager";
 import { triggerHaptic, withHaptics } from "../../utils/haptics";
@@ -18,7 +18,7 @@ const BoardItem = ({
   title,
   src,
   onPlaySound,
-  navigation,
+  onEditSound,
   removeSoundboardItem,
 }) => {
   const [sound, setSound] = useState(null);
@@ -178,12 +178,9 @@ const BoardItem = ({
           <TouchableOpacity
             style={[styles.actionButton, styles.editButton]}
             onPress={withHaptics("selection", () => {
-              navigation.navigate("Edit", {
-                sid,
-                fileName: name,
-                title,
-                src,
-              });
+              if (onEditSound) {
+                onEditSound({ sid, name, title, src });
+              }
               setShowActions(false);
             })}
           >

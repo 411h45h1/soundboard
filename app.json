@@ -2,20 +2,40 @@
   "expo": {
     "name": "SoundBoard",
     "slug": "SoundBoard",
-    "version": "1.2.0",
+    "scheme": "soundboard",
+    "version": "2.0.0",
     "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#5E403F"
     },
+    "newArchEnabled": true,
     "updates": {
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/7b28c2b7-8f37-47d2-8d32-c0f189205b39"
     },
     "assetBundlePatterns": [
       "**/*"
+    ],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#5E403F",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "ios": {
       "bundleIdentifier": "com.ourends.soundboard",
@@ -36,18 +56,25 @@
       ],
       "package": "com.notso_software.soundboard",
       "backgroundColor": "#5E403F",
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#5E403F"
       }
     },
     "web": {
+      "output": "static",
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "router": {},
       "eas": {
         "projectId": "7b28c2b7-8f37-47d2-8d32-c0f189205b39"
       }
+    },
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
     },
     "runtimeVersion": {
       "policy": "appVersion"
