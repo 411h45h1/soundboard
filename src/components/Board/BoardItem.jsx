@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { Audio } from "expo-audio";
+import { useAudioPlayer } from "expo-audio";
 import { useIsLandscape, isTablet, normalize } from "../../core/responsive";
 import { validateSound } from "../../utils/SoundManager";
 import { triggerHaptic, withHaptics } from "../../utils/haptics";
@@ -21,19 +21,17 @@ const BoardItem = ({
   onEditSound,
   removeSoundboardItem,
 }) => {
-  const [sound, setSound] = useState(null);
   const [showActions, setShowActions] = useState(false);
   const [isValid, setIsValid] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const isLandscape = useIsLandscape();
-  const isProcessing = useRef(false);
   const hasUnmounted = useRef(false);
   const componentId = useRef(`board-item-${sid}`).current;
 
-  useEffect(() => {
-    isProcessing.current = src?._processing || false;
+  // Create audio player for this item
+  const player = useAudioPlayer();
 
+  useEffect(() => {
     const checkSoundValidity = async () => {
       try {
         setIsLoading(true);
@@ -55,51 +53,23 @@ const BoardItem = ({
 
     return () => {
       hasUnmounted.current = true;
-      if (sound) {
-        sound.unloadAsync();
-      }
     };
   }, [src, name]);
 
   useEffect(() => {
-    const stopListener = (e) => {
-      if (isPlaying && sound) {
-        setIsPlaying(false);
-      }
-    };
-
-    if (global.soundBoardRegistry) {
-      global.soundBoardRegistry[componentId] = stopListener;
-    } else {
-      global.soundBoardRegistry = {
-        [componentId]: stopListener,
-      };
-    }
-
     return () => {
-      if (global.soundBoardRegistry) {
-        delete global.soundBoardRegistry[componentId];
-      }
+      hasUnmounted.current = true;
     };
-  }, [sound, isPlaying]);
-
-  useEffect(() => {
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [sound]);
+  }, []);
 
   const playSound = useCallback(async () => {
-    if (isPlaying && sound) {
+    if (player.playing) {
       triggerHaptic("medium");
       try {
-        await sound.stopAsync();
-        setIsPlaying(false);
+        player.pause();
         return;
       } catch (error) {
-        console.error("Error stopping sound:", error);
+        console.error("Error pausing sound:", error);
       }
     }
 
@@ -121,42 +91,21 @@ const BoardItem = ({
         return;
       }
 
-      if (sound) {
-        await sound.unloadAsync();
-      }
+      // Replace the current audio source and play
+      player.replace({ uri: src });
+      player.play();
 
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: src },
-        { shouldPlay: true },
-        (status) => {
-          if (hasUnmounted.current) return;
-
-          if (status.isLoaded) {
-            setIsPlaying(status.isPlaying);
-            if (status.didJustFinish) {
-              setIsPlaying(false);
-            }
-          }
-        }
-      );
-
-      setSound(newSound);
-      setIsPlaying(true);
-      onPlaySound(newSound);
-
-      newSound._boardItemId = sid;
-      newSound._componentId = componentId;
+      onPlaySound(player);
     } catch (error) {
       triggerHaptic("error");
       console.error("Error playing sound:", error);
-      setIsPlaying(false);
       setIsValid(false);
       Alert.alert(
-        "Playback Error",
+        "Playbook Error",
         "Failed to play the sound. The file might be corrupted or missing."
       );
     }
-  }, [sound, src, onPlaySound, isPlaying, sid, componentId]);
+  }, [player, src, onPlaySound, sid, componentId]);
 
   const handleLongPress = useCallback(() => {
     triggerHaptic("medium");
@@ -203,8 +152,8 @@ const BoardItem = ({
         style={[
           styles.soundButton,
           {
-            backgroundColor: isProcessing.current ? "#8A6E6E" : "#A57878",
-            borderColor: isPlaying ? "#FFFFFF" : "transparent",
+            backgroundColor: "#A57878",
+            borderColor: player.playing ? "#FFFFFF" : "transparent",
           },
         ]}
         onPress={isLoading ? null : playSound}

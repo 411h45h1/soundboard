@@ -12,7 +12,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AppContext } from "../context/AppState";
 import { triggerHaptic } from "../utils/haptics";
-import { Audio } from "expo-audio";
+import { useAudioPlayer } from "expo-audio";
 import { normalize } from "../core/responsive";
 
 const getFirstValue = (value, fallback = "") => {
@@ -41,6 +41,9 @@ const EditBoard = () => {
     [params.title]
   );
 
+  // Create audio player for getting duration
+  const tempPlayer = useAudioPlayer();
+
   const [titleText, setTitleText] = useState(initialTitle);
   const [duration, setDuration] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,20 +57,22 @@ const EditBoard = () => {
         }
 
         setLoading(true);
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: src },
-          {},
-          null,
-          false
-        );
 
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded && status.durationMillis) {
-          setDuration(status.durationMillis);
-        }
+        // Replace the player source and wait for it to load
+        tempPlayer.replace({ uri: src });
 
-        await sound.unloadAsync();
-        setLoading(false);
+        // Wait a bit for the player to load and get duration
+        const checkDuration = () => {
+          if (tempPlayer.duration > 0) {
+            setDuration(tempPlayer.duration * 1000); // Convert to milliseconds
+            setLoading(false);
+          } else {
+            // Try again after a short delay
+            setTimeout(checkDuration, 100);
+          }
+        };
+
+        checkDuration();
       } catch (error) {
         console.error("Error getting audio duration:", error);
         setLoading(false);
@@ -75,7 +80,7 @@ const EditBoard = () => {
     };
 
     loadSoundAndGetDuration();
-  }, [src]);
+  }, [src, tempPlayer]);
 
   useEffect(() => {
     setTitleText(initialTitle);
