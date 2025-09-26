@@ -2,7 +2,7 @@ import { Dimensions, Platform, PixelRatio } from "react-native";
 import { useEffect, useState } from "react";
 
 // Get the initial screen dimensions
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const baseWidth = 320;
 const scale = SCREEN_WIDTH / baseWidth;

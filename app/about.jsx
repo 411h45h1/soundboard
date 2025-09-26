@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Constants from "expo-constants";
-import { useTheme } from "../../src/context/ThemeContext";
+import { useTheme } from "../src/context/ThemeContext";
 
 export default function AboutScreen() {
   const { colors } = useTheme();
@@ -55,13 +55,13 @@ export default function AboutScreen() {
           What&apos;s New
         </Text>
         <Text style={[styles.infoText, { color: colors.text }]}>
-          • Expo Router driven navigation with drawers and native tabs.
+          • Streamlined navigation with a lightweight tab experience.
         </Text>
         <Text style={[styles.infoText, { color: colors.text }]}>
-          • Updated to Expo SDK 54 with expo-audio support.
+          • Premium-ready architecture with subscription-aware features.
         </Text>
         <Text style={[styles.infoText, { color: colors.text }]}>
-          • Improved layout for tablets and large screens.
+          • Refreshed browsing tools to manage your boards quickly.
         </Text>
       </View>
     </ScrollView>

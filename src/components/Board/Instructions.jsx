@@ -38,7 +38,7 @@ const Instructions = ({ setShowInstructions }) => {
           }}
         >
           • <Text style={{ fontWeight: "bold" }}>Stop a sound:</Text> Tap the
-          sound tile again while it's playing
+          sound tile again while it’s playing
         </Text>
 
         <Text
@@ -49,7 +49,7 @@ const Instructions = ({ setShowInstructions }) => {
           }}
         >
           • <Text style={{ fontWeight: "bold" }}>Edit a sound:</Text> Long-press
-          on a sound tile, then tap "Edit"
+          on a sound tile, then tap “Edit”
         </Text>
 
         <Text
@@ -60,7 +60,7 @@ const Instructions = ({ setShowInstructions }) => {
           }}
         >
           • <Text style={{ fontWeight: "bold" }}>Delete a sound:</Text>{" "}
-          Long-press on a sound tile, then tap "Delete"
+          Long-press on a sound tile, then tap “Delete”
         </Text>
 
         <Text
@@ -70,8 +70,8 @@ const Instructions = ({ setShowInstructions }) => {
             marginBottom: 10,
           }}
         >
-          • <Text style={{ fontWeight: "bold" }}>Add a sound:</Text> Tap "Add
-          Sound" in the controls
+          • <Text style={{ fontWeight: "bold" }}>Add a sound:</Text> Tap “Add
+          Sound” in the controls
         </Text>
 
         <Text
@@ -82,7 +82,7 @@ const Instructions = ({ setShowInstructions }) => {
           }}
         >
           • <Text style={{ fontWeight: "bold" }}>Record a sound:</Text> Tap
-          "Record", then tap again to stop recording
+          “Record”, then tap again to stop recording
         </Text>
 
         <Text
@@ -93,7 +93,7 @@ const Instructions = ({ setShowInstructions }) => {
           }}
         >
           • <Text style={{ fontWeight: "bold" }}>Stop all sounds:</Text> Tap
-          "Stop All Sounds" button
+          “Stop All Sounds” button
         </Text>
 
         <Text
@@ -104,7 +104,7 @@ const Instructions = ({ setShowInstructions }) => {
           }}
         >
           • <Text style={{ fontWeight: "bold" }}>Switch boards:</Text> Tap
-          "Select Board", then choose a board
+          “Select Board”, then choose a board
         </Text>
 
         <TouchableOpacity

@@ -10,7 +10,7 @@ import { useRouter } from "expo-router";
 import { AppContext } from "../../context/AppState";
 import { useIsLandscape, normalize } from "../../core/responsive";
 import { triggerHaptic } from "../../utils/haptics";
-import SoundManager from "../../utils/SoundManager";
+import * as SoundManager from "../../utils/SoundManager";
 import PopupModal from "../PopupModal";
 import RecordAudioButton from "../RecordAudioButton";
 import BoardHeader from "./BoardHeader";
@@ -21,6 +21,8 @@ import Instructions from "./Instructions";
 import CreateBoardModal from "./CreateBoardModal";
 import RenameBoardModal from "./RenameBoardModal";
 import StopAllSoundsButton from "./StopAllSoundsButton";
+import PremiumUpsellModal from "../PremiumUpsellModal";
+import { useSubscription } from "../../context/SubscriptionContext";
 
 const Board = () => {
   const router = useRouter();
@@ -32,7 +34,9 @@ const Board = () => {
     removeSoundboardItem,
     removeBoard,
     renameBoard,
+    limits,
   } = useContext(AppContext);
+  const { upgradeToPremium, premiumBenefits } = useSubscription();
 
   const [newBoardName, setNewBoardName] = useState("");
   const [renameBoardName, setRenameBoardName] = useState("");
@@ -41,10 +45,13 @@ const Board = () => {
   const [showControls, setShowControls] = useState(true);
   const [showSelectBoard, setShowSelectBoard] = useState(false);
   const [isLoadingSounds, setIsLoadingSounds] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   const playingSounds = useRef([]);
   const isLandscape = useIsLandscape();
+  const maxBoards = limits?.maxBoards ?? Number.POSITIVE_INFINITY;
+  const boardLimitReached =
+    Number.isFinite(maxBoards) && boards.length >= maxBoards;
 
   const handleEditSound = useCallback(
     ({ sid, name, title, src }) => {
@@ -62,17 +69,21 @@ const Board = () => {
   );
 
   useEffect(() => {
+    let isActive = true;
+
     const validateSoundsInBatches = async () => {
       if (
         !currentBoard ||
         !currentBoard.sounds ||
         currentBoard.sounds.length === 0
       ) {
-        setInitialLoad(false);
+        if (isActive) {
+          setIsLoadingSounds(false);
+        }
         return;
       }
 
-      if (initialLoad) {
+      if (isActive) {
         setIsLoadingSounds(true);
       }
 
@@ -80,7 +91,7 @@ const Board = () => {
       const totalSounds = currentBoard.sounds.length;
       let processedSounds = 0;
 
-      while (processedSounds < totalSounds) {
+      while (processedSounds < totalSounds && isActive) {
         const batch = currentBoard.sounds.slice(
           processedSounds,
           Math.min(processedSounds + BATCH_SIZE, totalSounds)
@@ -88,6 +99,9 @@ const Board = () => {
 
         for (const sound of batch) {
           await SoundManager.validateSound({ uri: sound.uri });
+          if (!isActive) {
+            return;
+          }
         }
 
         processedSounds += batch.length;
@@ -96,11 +110,16 @@ const Board = () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
 
-      setIsLoadingSounds(false);
-      setInitialLoad(false);
+      if (isActive) {
+        setIsLoadingSounds(false);
+      }
     };
 
     validateSoundsInBatches();
+
+    return () => {
+      isActive = false;
+    };
   }, [currentBoard]);
 
   // Updated stopAllSounds function to notify all playing components
@@ -151,13 +170,21 @@ const Board = () => {
   };
 
   const handleCreateBoard = () => {
-    if (newBoardName.trim()) {
+    if (!newBoardName.trim()) {
+      triggerHaptic("error");
+      return;
+    }
+
+    const creationResult = createBoard(newBoardName.trim());
+
+    if (creationResult?.success) {
       triggerHaptic("success");
-      createBoard(newBoardName);
       setNewBoardName("");
       setShowCreateBoard(false);
-    } else {
-      triggerHaptic("error");
+    } else if (creationResult?.reason === "board-limit") {
+      triggerHaptic("warning");
+      setShowCreateBoard(false);
+      setShowPremiumUpsell(true);
     }
   };
 
@@ -201,6 +228,21 @@ const Board = () => {
         paddingHorizontal: 5,
       }}
     >
+      <PremiumUpsellModal
+        visible={showPremiumUpsell}
+        onClose={() => setShowPremiumUpsell(false)}
+        onUpgrade={async () => {
+          await upgradeToPremium();
+          setShowPremiumUpsell(false);
+          if (newBoardName.trim()) {
+            setTimeout(() => {
+              handleCreateBoard();
+            }, 150);
+          }
+        }}
+        benefits={premiumBenefits}
+        limits={limits}
+      />
       <BoardHeader isLandscape={isLandscape} />
 
       {currentBoard && (
@@ -247,6 +289,10 @@ const Board = () => {
                 newBoardName={newBoardName}
                 setNewBoardName={setNewBoardName}
                 handleCreateBoard={handleCreateBoard}
+                boardLimitReached={boardLimitReached}
+                boardCount={boards.length}
+                limits={limits}
+                onRequestUpgrade={() => setShowPremiumUpsell(true)}
               />
             )}
 
@@ -287,7 +333,7 @@ const Board = () => {
               <RecordAudioButton />
             </View>
 
-            {isLoadingSounds && initialLoad ? (
+            {isLoadingSounds ? (
               <View style={{ padding: 20, alignItems: "center" }}>
                 <ActivityIndicator size="large" color="#EAE0D5" />
                 <Text style={{ color: "#EAE0D5", marginTop: 10 }}>

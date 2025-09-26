@@ -1,12 +1,14 @@
 import React, { useContext } from "react";
-import { StyleSheet, TouchableOpacity, Text } from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, Text } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { normalize } from "../core/responsive";
 import { AppContext } from "../context/AppState";
 import { triggerHaptic } from "../utils/haptics";
+import { useSubscription } from "../context/SubscriptionContext";
 
 const CreateBoardItem = () => {
   const { updateSoundBoard } = useContext(AppContext);
+  const { upgradeToPremium, limits } = useSubscription();
 
   const pickAudio = async () => {
     triggerHaptic("selection");
@@ -29,7 +31,24 @@ const CreateBoardItem = () => {
         const { name, uri } = result.assets[0];
         const id = Date.now() + Math.floor(Math.random() * 9000) + 1000;
 
-        updateSoundBoard({ sid: id, name, uri });
+        const result = await updateSoundBoard({ sid: id, name, uri });
+
+        if (result?.success === false && result.reason === "sound-limit") {
+          triggerHaptic("warning");
+          Alert.alert(
+            "Storage limit reached",
+            `Free boards may contain up to ${
+              limits?.maxUploadsPerBoard ?? 0
+            } sounds. Upgrade to keep adding clips.`,
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Go Premium",
+                onPress: () => upgradeToPremium({ source: "upload-limit" }),
+              },
+            ]
+          );
+        }
       }
     } catch (error) {
       triggerHaptic("error");

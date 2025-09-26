@@ -17,11 +17,11 @@ export const ensureSoundsDirectoryExists = async () => {
   const directory = getSoundsDirectoryPath();
 
   try {
-    directory.create({ intermediates: true });
+    await directory.create({ intermediates: true });
     return directory;
   } catch (error) {
     // Directory might already exist, which is fine
-    if (!directory.exists) {
+    if (!(await directory.exists)) {
       throw error;
     }
     return directory;
@@ -115,7 +115,7 @@ export const addSound = async (uri, name, category, base64Data = null) => {
   try {
     // If we have base64 data, write it directly
     if (base64Data) {
-      destinationFile.write(base64Data);
+      await destinationFile.write(base64Data);
     } else {
       if (!uri) {
         throw new Error(
@@ -125,7 +125,7 @@ export const addSound = async (uri, name, category, base64Data = null) => {
 
       // Create a source file instance and copy it
       const sourceFile = new File(uri);
-      sourceFile.copy(destinationFile);
+      await sourceFile.copy(destinationFile);
     }
 
     // Save metadata
@@ -155,7 +155,7 @@ export const validateSound = async (soundMetadata) => {
   try {
     const file = new File(soundMetadata.uri);
 
-    if (!file.exists) {
+    if (!(await file.exists)) {
       console.log(`Sound file not found at: ${soundMetadata.uri}`);
       return false;
     }
@@ -182,8 +182,8 @@ export const removeSound = async (soundId) => {
     if (soundToRemove && soundToRemove.uri) {
       // Delete the actual file
       const file = new File(soundToRemove.uri);
-      if (file.exists) {
-        file.delete();
+      if (await file.exists) {
+        await file.delete();
       }
     }
 

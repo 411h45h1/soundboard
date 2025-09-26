@@ -1,19 +1,81 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { File } from "expo-file-system";
-import SoundManager from "../utils/SoundManager";
+import * as SoundManager from "../utils/SoundManager";
+import { useSubscription } from "./SubscriptionContext";
 
 const AppContext = React.createContext();
 
 const AppState = (props) => {
   const [boards, setBoards] = useState([]);
   const [currentBoard, setCurrentBoard] = useState(null);
+  const { canCreateBoard, canAddSound, limits } = useSubscription();
 
-  useEffect(() => {
-    getBoards();
+  const saveBoardsToStorage = useCallback(async (updatedBoards) => {
+    try {
+      await AsyncStorage.setItem("soundboards", JSON.stringify(updatedBoards));
+    } catch (e) {
+      console.error("Error saving boards:", e);
+    }
   }, []);
 
-  const getBoards = async () => {
+  const createDefaultBoard = useCallback(async () => {
+    try {
+      const defaultBoard = {
+        id: Date.now(),
+        name: "First Board",
+        sounds: [],
+      };
+
+      const defaultSoundsRemoved = await AsyncStorage.getItem(
+        "defaultSoundsRemoved"
+      );
+
+      if (defaultSoundsRemoved !== "true") {
+        const defaultSounds = [
+          {
+            sid: Date.now() + 1,
+            uri: "https://firebasestorage.googleapis.com/v0/b/powerlv-a2081.appspot.com/o/assets%2FCrash.mp3?alt=media&token=f7009ced-8eee-4210-ac98-7635d6eb486b",
+            name: "crash_notso_software.mp3",
+            title: "Crash Sound",
+          },
+          {
+            sid: Date.now() + 2,
+            uri: "https://firebasestorage.googleapis.com/v0/b/powerlv-a2081.appspot.com/o/assets%2Fding.mp3?alt=media&token=517271f9-5e73-48a1-92bc-fd9438aa24b3",
+            name: "ding_notso_software.mp3",
+            title: "Ding Sound",
+          },
+        ];
+
+        await SoundManager.ensureSoundsDirectoryExists();
+
+        for (const sound of defaultSounds) {
+          const localFile = SoundManager.getSoundFileUri(sound.name);
+
+          try {
+            if (!localFile.exists) {
+              await File.downloadFileAsync(sound.uri, localFile);
+              await SoundManager.addSound(localFile.uri, sound.name, "Default");
+            }
+
+            sound.uri = localFile.uri;
+            defaultBoard.sounds.push(sound);
+          } catch (error) {
+            console.error(`Error downloading ${sound.name}:`, error);
+            continue;
+          }
+        }
+      }
+
+      setBoards([defaultBoard]);
+      setCurrentBoard(defaultBoard);
+      await saveBoardsToStorage([defaultBoard]);
+    } catch (e) {
+      console.error("Error creating default board:", e);
+    }
+  }, [saveBoardsToStorage]);
+
+  const getBoards = useCallback(async () => {
     try {
       const jsonValue = await AsyncStorage.getItem("soundboards");
       if (jsonValue !== null) {
@@ -111,79 +173,34 @@ const AppState = (props) => {
         // Save the validated boards back to storage
         await saveBoardsToStorage(validatedBoards);
       } else {
-        createDefaultBoard();
+        await createDefaultBoard();
       }
     } catch (e) {
       console.error("Error fetching boards:", e);
     }
-  };
+  }, [createDefaultBoard, saveBoardsToStorage]);
 
-  const createDefaultBoard = useCallback(async () => {
-    try {
-      const defaultBoard = {
-        id: Date.now(),
-        name: "First Board",
-        sounds: [],
-      };
-
-      const defaultSoundsRemoved = await AsyncStorage.getItem(
-        "defaultSoundsRemoved"
+  useEffect(() => {
+    // Don't block the app if board loading fails
+    getBoards().catch((error) => {
+      console.error(
+        "Failed to load boards, continuing with empty state:",
+        error
       );
-
-      if (defaultSoundsRemoved !== "true") {
-        const defaultSounds = [
-          {
-            sid: Date.now() + 1,
-            uri: "https://firebasestorage.googleapis.com/v0/b/powerlv-a2081.appspot.com/o/assets%2FCrash.mp3?alt=media&token=f7009ced-8eee-4210-ac98-7635d6eb486b",
-            name: "crash_notso_software.mp3",
-            title: "Crash Sound",
-          },
-          {
-            sid: Date.now() + 2,
-            uri: "https://firebasestorage.googleapis.com/v0/b/powerlv-a2081.appspot.com/o/assets%2Fding.mp3?alt=media&token=517271f9-5e73-48a1-92bc-fd9438aa24b3",
-            name: "ding_notso_software.mp3",
-            title: "Ding Sound",
-          },
-        ];
-
-        await SoundManager.ensureSoundsDirectoryExists();
-
-        for (const sound of defaultSounds) {
-          const localFile = SoundManager.getSoundFileUri(sound.name);
-
-          try {
-            if (!localFile.exists) {
-              await File.downloadFileAsync(sound.uri, localFile);
-              await SoundManager.addSound(localFile.uri, sound.name, "Default");
-            }
-
-            sound.uri = localFile.uri;
-            defaultBoard.sounds.push(sound);
-          } catch (error) {
-            console.error(`Error downloading ${sound.name}:`, error);
-            continue;
-          }
-        }
-      }
-
-      setBoards([defaultBoard]);
-      setCurrentBoard(defaultBoard);
-      await saveBoardsToStorage([defaultBoard]);
-    } catch (e) {
-      console.error("Error creating default board:", e);
-    }
-  }, []);
-
-  const saveBoardsToStorage = useCallback(async (updatedBoards) => {
-    try {
-      await AsyncStorage.setItem("soundboards", JSON.stringify(updatedBoards));
-    } catch (e) {
-      console.error("Error saving boards:", e);
-    }
-  }, []);
+      setBoards([]);
+    });
+  }, [getBoards]);
 
   const createBoard = useCallback(
     (name) => {
+      if (!canCreateBoard(boards.length)) {
+        return {
+          success: false,
+          reason: "board-limit",
+          limit: limits.maxBoards,
+        };
+      }
+
       const newBoard = {
         id: Date.now(),
         name,
@@ -193,17 +210,34 @@ const AppState = (props) => {
       setBoards(updatedBoards);
       setCurrentBoard(newBoard);
       saveBoardsToStorage(updatedBoards);
+      return {
+        success: true,
+        board: newBoard,
+      };
     },
-    [boards, saveBoardsToStorage]
+    [boards, canCreateBoard, limits.maxBoards, saveBoardsToStorage]
   );
 
   const updateSoundBoard = useCallback(
     async (soundObj) => {
-      if (!currentBoard) return;
+      if (!currentBoard) {
+        return {
+          success: false,
+          reason: "no-board",
+        };
+      }
+
+      const currentSounds = currentBoard?.sounds?.length ?? 0;
+      if (!canAddSound(currentSounds)) {
+        return {
+          success: false,
+          reason: "sound-limit",
+          limit: limits.maxUploadsPerBoard,
+        };
+      }
 
       try {
         const fileName = soundObj.name;
-        const soundName = soundObj.title || fileName;
 
         // Start updating the UI immediately - don't wait for the file operation
         // This creates a more responsive feeling
@@ -252,6 +286,10 @@ const AppState = (props) => {
         setBoards(finalUpdatedBoards);
         setCurrentBoard(finalUpdatedBoard);
         saveBoardsToStorage(finalUpdatedBoards);
+        return {
+          success: true,
+          sound: soundObj,
+        };
       } catch (error) {
         console.error("Error adding sound to board:", error);
         // Remove the temporary sound if there was an error
@@ -268,9 +306,20 @@ const AppState = (props) => {
           setBoards(fallbackBoards);
           setCurrentBoard(fallbackBoard);
         }
+        return {
+          success: false,
+          reason: "error",
+          error,
+        };
       }
     },
-    [currentBoard, boards, saveBoardsToStorage]
+    [
+      currentBoard,
+      boards,
+      canAddSound,
+      limits.maxUploadsPerBoard,
+      saveBoardsToStorage,
+    ]
   );
 
   const updateBoardItem = useCallback(
@@ -298,10 +347,6 @@ const AppState = (props) => {
   const removeSoundboardItem = useCallback(
     async (sid) => {
       if (!currentBoard) return;
-
-      const soundToRemove = currentBoard.sounds.find(
-        (sound) => sound.sid === sid
-      );
 
       const updatedBoard = {
         ...currentBoard,
@@ -378,6 +423,7 @@ const AppState = (props) => {
       removeSoundboardItem,
       removeBoard,
       renameBoard,
+      limits,
     }),
     [
       boards,
@@ -389,6 +435,7 @@ const AppState = (props) => {
       removeSoundboardItem,
       removeBoard,
       renameBoard,
+      limits,
     ]
   );
 

@@ -184,4 +184,6 @@ BoardControls.ControlPanel = ({
   );
 };
 
+BoardControls.ControlPanel.displayName = "BoardControlsControlPanel";
+
 export default BoardControls;

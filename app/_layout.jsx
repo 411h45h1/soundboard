@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -9,12 +9,14 @@ import * as Updates from "expo-updates";
 import { setAudioModeAsync } from "expo-audio";
 
 import { AppState } from "../src/context/AppState";
-import SoundManager from "../src/utils/SoundManager";
+import { SubscriptionProvider } from "../src/context/SubscriptionContext";
+import * as SoundManager from "../src/utils/SoundManager";
 import { ThemeProvider } from "../src/context/ThemeContext";
+import ErrorBoundary from "../src/components/ErrorBoundary";
 
-SplashScreen.preventAutoHideAsync().catch(() => {
-  /* Ignore errors */
-});
+export const unstable_settings = {
+  initialRouteName: "(tabs)",
+};
 
 const configureAudio = async () => {
   try {
@@ -85,50 +87,89 @@ export default function RootLayout() {
   useEffect(() => {
     const prepare = async () => {
       try {
+        console.log("Starting app initialization...");
+
         if (!__DEV__) {
+          console.log("Checking for updates...");
           await checkForUpdates();
         }
 
+        console.log("Configuring audio...");
         await configureAudio();
+
+        console.log("Ensuring sounds directory exists...");
         await SoundManager.ensureSoundsDirectoryExists();
 
+        console.log(
+          "App initialization complete, starting validation in background"
+        );
         setTimeout(() => {
-          validatePersistedSounds();
+          console.log("Starting background sound validation...");
+          validatePersistedSounds()
+            .then(() => {
+              console.log("Background sound validation complete");
+            })
+            .catch((error) => {
+              console.error("Background sound validation failed:", error);
+            });
         }, 1000);
       } catch (error) {
-        console.warn("App initialization error:", error);
+        console.error("App initialization error:", error);
       } finally {
+        console.log("Setting app as ready");
         setAppIsReady(true);
+        // Hide splash screen immediately when app is ready
+        setTimeout(async () => {
+          console.log("Hiding splash screen...");
+          try {
+            await SplashScreen.hideAsync();
+            console.log("Splash screen hidden successfully");
+          } catch (error) {
+            console.error("Error hiding splash screen:", error);
+          }
+        }, 100);
       }
     };
 
     prepare();
   }, []);
 
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady]);
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <SafeAreaProvider>
-        <AppState>
-          <ThemeProvider>
-            <StatusBar style="light" />
-            {appIsReady ? (
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
-              />
-            ) : (
-              <View style={{ flex: 1, backgroundColor: "#5E403F" }} />
-            )}
-          </ThemeProvider>
-        </AppState>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <SubscriptionProvider>
+            <AppState>
+              <ThemeProvider>
+                <StatusBar style="light" />
+                {appIsReady ? (
+                  <Stack
+                    initialRouteName="(tabs)"
+                    screenOptions={{
+                      headerShown: false,
+                    }}
+                  >
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{ animation: "none" }}
+                    />
+                    <Stack.Screen
+                      name="edit"
+                      options={{
+                        presentation: "modal",
+                        animation: "slide_from_bottom",
+                      }}
+                    />
+                    <Stack.Screen name="about" />
+                  </Stack>
+                ) : (
+                  <View style={{ flex: 1, backgroundColor: "#5E403F" }} />
+                )}
+              </ThemeProvider>
+            </AppState>
+          </SubscriptionProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }

@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Board from "../../../src/components/Board";
-import { useTheme } from "../../../src/context/ThemeContext";
+import Board from "../../src/components/Board";
+import { useTheme } from "../../src/context/ThemeContext";
 
 export default function HomeScreen() {
   const { colors } = useTheme();

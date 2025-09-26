@@ -1,66 +1,208 @@
-import React, { useState, useContext, useRef, useEffect } from "react";
-import { StyleSheet, Text, Pressable, View, Alert } from "react-native";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import {
-  useAudioRecorder,
   RecordingPresets,
-  setAudioModeAsync,
   requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
 } from "expo-audio";
-import { AppContext } from "../context/AppState";
 import { MaterialIcons } from "@expo/vector-icons";
+import { AppContext } from "../context/AppState";
+import { useSubscription } from "../context/SubscriptionContext";
 import { useIsLandscape, isTablet, normalize } from "../core/responsive";
 import { triggerHaptic } from "../utils/haptics";
+
+const MINIMUM_RECORDING_SECONDS = 0.5;
 
 const RecordAudioButton = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
-  const { updateSoundBoard, currentBoard } = useContext(AppContext);
-  const recordingStartTimeRef = useRef(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const timerRef = useRef(null);
+
+  const { updateSoundBoard, currentBoard } = useContext(AppContext);
+  const { limits, upgradeToPremium } = useSubscription();
+
+  const recordingStartTimeRef = useRef(null);
   const recordingStatusRef = useRef("idle");
+  const timerRef = useRef(null);
+  const autoStopTriggeredRef = useRef(false);
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-
   const isLandscape = useIsLandscape();
 
-  useEffect(() => {
-    return () => {
+  const maxRecordingSeconds = limits?.maxRecordingSeconds;
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
       clearInterval(timerRef.current);
-      if (audioRecorder && isRecording) {
-        stopRecording(true);
-      }
-    };
-  }, [audioRecorder, isRecording]);
+      timerRef.current = null;
+    }
+  }, []);
 
-  const formatRecordingTitle = () => {
+  const cleanupAfterRecording = useCallback(() => {
+    clearTimer();
+    setIsRecording(false);
+    setIsStopping(false);
+    recordingStartTimeRef.current = null;
+    recordingStatusRef.current = "idle";
+    autoStopTriggeredRef.current = false;
+  }, [clearTimer]);
+
+  const formatRecordingTitle = useCallback(() => {
     const now = new Date();
-
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const year = now.getFullYear();
-
     const hours = now.getHours();
     const minutes = String(now.getMinutes()).padStart(2, "0");
     const ampm = hours >= 12 ? "PM" : "AM";
     const formattedHours = hours % 12 || 12;
 
     return `Mic Recording ${month}/${day}/${year} @${formattedHours}:${minutes} ${ampm}`;
-  };
+  }, []);
 
-  const startRecording = async () => {
-    try {
-      if (isRecording || isInitializing || isStopping) {
-        console.log("Recording operation already in progress");
+  const startTimer = useCallback(() => {
+    clearTimer();
+    timerRef.current = setInterval(() => {
+      if (recordingStartTimeRef.current) {
+        const elapsed = Math.floor(
+          (Date.now() - recordingStartTimeRef.current) / 1000
+        );
+        setRecordingDuration(elapsed);
+      }
+    }, 1000);
+  }, [clearTimer]);
+
+  const stopRecording = useCallback(
+    async (isUnmounting = false) => {
+      if (isStopping || recordingStatusRef.current === "stopping") {
         return;
       }
 
-      recordingStatusRef.current = "initializing";
-      triggerHaptic("heavy");
-      setIsInitializing(true);
+      if (!isUnmounting) {
+        triggerHaptic("medium");
+      }
 
-      console.log("Requesting audio permission...");
+      recordingStatusRef.current = "stopping";
+      setIsStopping(true);
+      clearTimer();
+
+      const duration = recordingStartTimeRef.current
+        ? (Date.now() - recordingStartTimeRef.current) / 1000
+        : 0;
+
+      if (!audioRecorder) {
+        cleanupAfterRecording();
+        return;
+      }
+
+      try {
+        let uri = null;
+
+        try {
+          uri = audioRecorder.uri;
+        } catch (uriError) {
+          console.log("Could not read recorder URI before stop:", uriError);
+        }
+
+        try {
+          await audioRecorder.stop();
+        } catch (stopError) {
+          console.log("Error stopping recording:", stopError);
+          throw stopError;
+        }
+
+        await setAudioModeAsync({
+          allowsRecording: false,
+          playsInSilentMode: true,
+        });
+
+        if (
+          !isUnmounting &&
+          currentBoard &&
+          duration >= MINIMUM_RECORDING_SECONDS &&
+          uri
+        ) {
+          const soundObj = {
+            sid: Date.now(),
+            uri,
+            name: "Mic Recording",
+            title: formatRecordingTitle(),
+          };
+
+          const result = await updateSoundBoard(soundObj);
+
+          if (result?.success === false && result.reason === "sound-limit") {
+            triggerHaptic("warning");
+            Alert.alert(
+              "Board capacity reached",
+              `Free boards store up to ${
+                limits?.maxUploadsPerBoard ?? 0
+              } clips. Upgrade for limitless takes.`,
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Go Premium",
+                  onPress: () =>
+                    upgradeToPremium({ source: "recording-limit-upload" }),
+                },
+              ]
+            );
+          } else {
+            triggerHaptic("success");
+          }
+        } else if (duration < MINIMUM_RECORDING_SECONDS && !isUnmounting) {
+          triggerHaptic("error");
+          Alert.alert(
+            "Recording Too Short",
+            "Please record for at least half a second to save."
+          );
+        }
+      } catch (error) {
+        console.error("Error stopping recording:", error);
+        if (!isUnmounting) {
+          triggerHaptic("error");
+          Alert.alert(
+            "Recording Error",
+            "There was a problem with the recording. Please try again."
+          );
+        }
+      } finally {
+        cleanupAfterRecording();
+      }
+    },
+    [
+      audioRecorder,
+      clearTimer,
+      cleanupAfterRecording,
+      currentBoard,
+      formatRecordingTitle,
+      isStopping,
+      limits?.maxUploadsPerBoard,
+      updateSoundBoard,
+      upgradeToPremium,
+    ]
+  );
+
+  const startRecording = useCallback(async () => {
+    if (isRecording || isInitializing || isStopping) {
+      console.log("Recording operation already in progress");
+      return;
+    }
+
+    recordingStatusRef.current = "initializing";
+    triggerHaptic("heavy");
+    setIsInitializing(true);
+    autoStopTriggeredRef.current = false;
+
+    try {
       const permission = await requestRecordingPermissionsAsync();
       if (permission.status !== "granted") {
         console.error("Permission to access microphone denied");
@@ -69,7 +211,6 @@ const RecordAudioButton = () => {
         return;
       }
 
-      console.log("Starting recording...");
       await setAudioModeAsync({
         allowsRecording: true,
         playsInSilentMode: true,
@@ -85,19 +226,9 @@ const RecordAudioButton = () => {
       setIsInitializing(false);
       recordingStartTimeRef.current = Date.now();
       setRecordingDuration(0);
-
-      timerRef.current = setInterval(() => {
-        if (recordingStartTimeRef.current) {
-          const elapsed = Math.floor(
-            (Date.now() - recordingStartTimeRef.current) / 1000
-          );
-          setRecordingDuration(elapsed);
-        }
-      }, 1000);
-
-      console.log("Recording started");
-    } catch (err) {
-      console.error("Failed to start recording", err);
+      startTimer();
+    } catch (error) {
+      console.error("Failed to start recording", error);
       triggerHaptic("error");
       setIsInitializing(false);
       setIsRecording(false);
@@ -107,97 +238,51 @@ const RecordAudioButton = () => {
         "Could not start recording. Please try again."
       );
     }
-  };
+  }, [audioRecorder, isInitializing, isRecording, isStopping, startTimer]);
 
-  const stopRecording = async (isUnmounting = false) => {
-    if (isStopping || recordingStatusRef.current === "stopping") {
-      console.log("Already stopping recording");
-      return;
-    }
-
-    if (!isUnmounting) {
-      triggerHaptic("medium");
-    }
-
-    recordingStatusRef.current = "stopping";
-    setIsStopping(true);
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    const duration = recordingStartTimeRef.current
-      ? (Date.now() - recordingStartTimeRef.current) / 1000
-      : 0;
-
-    if (!audioRecorder) {
-      console.log("No recording object exists");
-      cleanupAfterRecording();
-      return;
-    }
-
-    let uri = null;
-
-    try {
-      try {
-        uri = audioRecorder.uri;
-        console.log("Got recording URI:", uri);
-      } catch (uriError) {
-        console.log("Could not get URI before stopping:", uriError.message);
+  useEffect(() => {
+    return () => {
+      clearTimer();
+      if (audioRecorder && isRecording) {
+        stopRecording(true);
+      } else {
+        cleanupAfterRecording();
       }
+    };
+  }, [
+    audioRecorder,
+    clearTimer,
+    cleanupAfterRecording,
+    isRecording,
+    stopRecording,
+  ]);
 
-      try {
-        console.log("Stopping recording...");
-        await audioRecorder.stop();
-        console.log("Recording stopped successfully");
-      } catch (stopError) {
-        console.log("Error stopping recording:", stopError.message);
-        throw stopError;
-      }
+  useEffect(() => {
+    if (!isRecording) return;
+    if (!Number.isFinite(maxRecordingSeconds)) return;
+    if (recordingDuration < maxRecordingSeconds) return;
+    if (autoStopTriggeredRef.current) return;
 
-      await setAudioModeAsync({
-        allowsRecording: false,
-        playsInSilentMode: true,
-      });
-
-      if (!isUnmounting && currentBoard && duration >= 0.5 && uri) {
-        const soundObj = {
-          sid: Date.now(),
-          uri,
-          name: "Mic Recording",
-          title: formatRecordingTitle(),
-        };
-
-        updateSoundBoard(soundObj);
-        triggerHaptic("success");
-      } else if (duration < 0.5 && !isUnmounting) {
-        triggerHaptic("error");
-        Alert.alert(
-          "Recording Too Short",
-          "Please record for at least 0.5 seconds to save."
-        );
-      }
-    } catch (error) {
-      console.error("Error in stopping recording process:", error);
-      triggerHaptic("error");
-      if (!isUnmounting) {
-        Alert.alert(
-          "Recording Error",
-          "There was a problem with the recording. Please try again."
-        );
-      }
-    } finally {
-      cleanupAfterRecording();
-    }
-  };
-
-  const cleanupAfterRecording = () => {
-    setIsRecording(false);
-    setIsStopping(false);
-    recordingStartTimeRef.current = null;
-    recordingStatusRef.current = "idle";
-  };
+    autoStopTriggeredRef.current = true;
+    stopRecording();
+    Alert.alert(
+      "Recording limit reached",
+      `Free recordings are limited to ${maxRecordingSeconds} seconds. Upgrade for longer takes and pro features.`,
+      [
+        { text: "Not now", style: "cancel" },
+        {
+          text: "Go Premium",
+          onPress: () => upgradeToPremium({ source: "recording-limit" }),
+        },
+      ]
+    );
+  }, [
+    isRecording,
+    maxRecordingSeconds,
+    recordingDuration,
+    stopRecording,
+    upgradeToPremium,
+  ]);
 
   const renderRecordingTimer = () => {
     if (!isRecording) return null;
@@ -246,6 +331,25 @@ const RecordAudioButton = () => {
           color={isRecording ? "#FFFFFF" : "#EAE0D5"}
         />
       </Pressable>
+      {Number.isFinite(maxRecordingSeconds) ? (
+        <View style={styles.limitRow}>
+          <Text style={styles.limitText}>
+            {isRecording
+              ? `${Math.max(
+                  maxRecordingSeconds - recordingDuration,
+                  0
+                )}s remaining`
+              : `Free recordings up to ${maxRecordingSeconds}s.`}
+          </Text>
+          <Pressable
+            onPress={() => upgradeToPremium({ source: "recording-banner" })}
+          >
+            <Text style={styles.limitCta}>Go Premium</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Text style={styles.limitText}>Premium: record up to 5 minutes.</Text>
+      )}
     </View>
   );
 };
@@ -280,5 +384,22 @@ const styles = StyleSheet.create({
     color: "#EAE0D5",
     fontWeight: "bold",
     fontSize: normalize(14),
+  },
+  limitRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 6,
+  },
+  limitText: {
+    color: "#EAE0D5",
+    opacity: 0.75,
+    fontSize: normalize(12),
+  },
+  limitCta: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: normalize(12),
+    textDecorationLine: "underline",
   },
 });

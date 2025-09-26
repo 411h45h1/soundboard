@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useAudioPlayer } from "expo-audio";
-import { useIsLandscape, isTablet, normalize } from "../../core/responsive";
+import { normalize } from "../../core/responsive";
 import { validateSound } from "../../utils/SoundManager";
 import { triggerHaptic, withHaptics } from "../../utils/haptics";
 
@@ -24,9 +24,7 @@ const BoardItem = ({
   const [showActions, setShowActions] = useState(false);
   const [isValid, setIsValid] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const isLandscape = useIsLandscape();
   const hasUnmounted = useRef(false);
-  const componentId = useRef(`board-item-${sid}`).current;
 
   // Create audio player for this item
   const player = useAudioPlayer();
@@ -105,7 +103,7 @@ const BoardItem = ({
         "Failed to play the sound. The file might be corrupted or missing."
       );
     }
-  }, [player, src, onPlaySound, sid, componentId]);
+  }, [player, src, onPlaySound]);
 
   const handleLongPress = useCallback(() => {
     triggerHaptic("medium");
