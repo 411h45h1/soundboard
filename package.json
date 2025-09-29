@@ -7,7 +7,7 @@
     "ghd": "bun clean && bun i",
     "start": "expo start --dev-client",
     "start:c": "expo start -c --dev-client",
-    "clean": "rimraf dist .expo .expo-shared node_modules yarn.lock package-lock.json bun.lock",
+    "clean": "rm -rf dist .expo .expo-shared node_modules yarn.lock package-lock.json bun.lock",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
