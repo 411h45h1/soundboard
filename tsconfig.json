@@ -1,0 +1,64 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "exactOptionalPropertyTypes": false,
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "declaration": false,
+        "jsx": "react-jsx",
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "es6"
+        ],
+        "allowJs": true,
+        "module": "esnext",
+        "target": "esnext",
+        "noEmit": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ],
+            "@/components/*": [
+                "./src/components/*"
+            ],
+            "@/utils/*": [
+                "./src/utils/*"
+            ],
+            "@/types/*": [
+                "./src/types/*"
+            ],
+            "@/core/*": [
+                "./src/core/*"
+            ],
+            "@/constants/*": [
+                "./src/constants/*"
+            ],
+            "@/app/*": [
+                "./app/*"
+            ]
+        }
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.d.ts",
+        "app/**/*.ts",
+        "app/**/*.tsx"
+    ],
+    "exclude": [
+        "node_modules",
+        "babel.config.js"
+    ]
+}

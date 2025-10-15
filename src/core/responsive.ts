@@ -1,8 +1,8 @@
-import { Dimensions, Platform, PixelRatio } from "react-native";
-import { useEffect, useState } from "react";
+import { Dimensions, Platform, PixelRatio } from 'react-native';
+import { useEffect, useState } from 'react';
 
 // Get the initial screen dimensions
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const baseWidth = 320;
 const scale = SCREEN_WIDTH / baseWidth;
@@ -12,20 +12,14 @@ const scale = SCREEN_WIDTH / baseWidth;
  * @param {number} size - Original size to normalize
  * @returns {number} - Normalized size based on screen width
  */
-export const normalize = (size) => {
-  // Check if device is a tablet
+export const normalize = (size: number): number => {
   const isTabletDevice = isTablet();
 
-  // Use a different scale factor for tablets
   let scaleFactor = scale;
 
   if (isTabletDevice) {
-    // On tablets, use a more conservative scaling approach
-    // This prevents text from becoming too large
     const tabletScale = Math.min(scale, 1.5);
 
-    // Apply a reduction factor based on screen size
-    // Larger screens get a lower scaling factor
     const reductionFactor = SCREEN_WIDTH > 1000 ? 0.7 : 0.85;
 
     scaleFactor = tabletScale * reductionFactor;
@@ -33,8 +27,7 @@ export const normalize = (size) => {
 
   const newSize = size * scaleFactor;
 
-  // Differentiate between iOS and Android scaling behavior
-  if (Platform.OS === "ios") {
+  if (Platform.OS === 'ios') {
     return Math.round(PixelRatio.roundToNearestPixel(newSize));
   } else {
     return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
@@ -46,16 +39,14 @@ export const normalize = (size) => {
  * @param {string} style - Font style ('bold', 'light', or default)
  * @returns {string} - Font family name
  */
-export const font = (style) => {
+export const font = (style?: string): string => {
   switch (style) {
-    case "bold":
-      return Platform.OS === "ios"
-        ? "AmericanTypewriter-Bold"
-        : "sans-serif-condensed";
-    case "light":
-      return Platform.OS === "ios" ? "AmericanTypewriter-Light" : "notoserif";
+    case 'bold':
+      return Platform.OS === 'ios' ? 'AmericanTypewriter-Bold' : 'sans-serif-condensed';
+    case 'light':
+      return Platform.OS === 'ios' ? 'AmericanTypewriter-Light' : 'notoserif';
     default:
-      return Platform.OS === "ios" ? "American Typewriter" : "sans-serif";
+      return Platform.OS === 'ios' ? 'American Typewriter' : 'sans-serif';
   }
 };
 
@@ -63,14 +54,14 @@ export const font = (style) => {
  * Get screen dimensions dynamically
  * @returns {object} - Object containing screen width and height
  */
-export const getScreenDimensions = () => Dimensions.get("window");
+export const getScreenDimensions = () => Dimensions.get('window');
 
 /**
  * Check if the device is in landscape mode dynamically
  * @returns {boolean} - True if the device is in landscape mode
  */
 export const isLandscape = () => {
-  const { width, height } = Dimensions.get("window");
+  const { width, height } = Dimensions.get('window');
   return width > height;
 };
 
@@ -82,15 +73,17 @@ export const useIsLandscape = () => {
   const [landscape, setLandscape] = useState(isLandscape());
 
   useEffect(() => {
-    const onChange = ({ window: { width, height } }) => {
+    const onChange = ({
+      window: { width, height },
+    }: {
+      window: { width: number; height: number };
+    }) => {
       setLandscape(width > height);
     };
 
-    // Listen to changes in dimensions
-    const subscription = Dimensions.addEventListener("change", onChange);
+    const subscription = Dimensions.addEventListener('change', onChange);
 
     return () => {
-      // Clean up the event listener
       subscription?.remove();
     };
   }, []);
@@ -103,7 +96,7 @@ export const useIsLandscape = () => {
  * @returns {boolean} - True if the device is a tablet (based on screen size)
  */
 export const isTablet = () => {
-  const { width, height } = Dimensions.get("window");
+  const { width, height } = Dimensions.get('window');
   const aspectRatio = height / width;
-  return width >= 768 && aspectRatio < 1.6; // Typical tablet aspect ratio is around 1.33 (4:3)
+  return width >= 768 && aspectRatio < 1.6;
 };

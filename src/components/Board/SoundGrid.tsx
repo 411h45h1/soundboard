@@ -1,30 +1,29 @@
-import React from "react";
-import { View, Dimensions, StyleSheet } from "react-native";
-import BoardItem from "./BoardItem";
-import { isTablet } from "../../core/responsive";
+import React from 'react';
+import { View, Dimensions, StyleSheet } from 'react-native';
+import BoardItem from './BoardItem';
+import { isTablet } from '../../core/responsive';
+import { SoundGridProps } from '../../types';
 
-const SoundGrid = ({
+const SoundGrid: React.FC<SoundGridProps> = ({
   sounds,
   navigation,
   onPlaySound,
   removeSoundboardItem,
 }) => {
-  // Calculate how many columns based on screen width and device type
-  const screenWidth = Dimensions.get("window").width;
+  const screenWidth = Dimensions.get('window').width;
   const isTabletDevice = isTablet();
 
-  // Configure the grid to have more columns on tablets
   const numColumns = isTabletDevice
     ? screenWidth > 1000
       ? 5
       : 4 // More columns on larger tablets
     : screenWidth > 400
-    ? 3
-    : 2; // Fewer columns on phones
+      ? 3
+      : 2; // Fewer columns on phones
 
   return (
     <View style={styles.gridContainer}>
-      {sounds.map((item) => (
+      {sounds.map(item => (
         <View
           key={`${item.sid}-${item.uri}`}
           style={[styles.itemContainer, { width: `${100 / numColumns}%` }]}
@@ -46,11 +45,11 @@ const SoundGrid = ({
 
 const styles = StyleSheet.create({
   gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingTop: 10,
     paddingHorizontal: 5,
-    justifyContent: "space-evenly",
+    justifyContent: 'space-evenly',
   },
   itemContainer: {
     paddingHorizontal: 5,
