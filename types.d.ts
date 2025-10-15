@@ -5,7 +5,7 @@ import { ImageSourcePropType } from 'react-native';
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      [elemName: string]: React.ComponentProps<React.ComponentType>;
+      [elemName: string]: any;
     }
   }
 }
