@@ -4,10 +4,11 @@
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
-    "reinstall:start": "bun ghd && bun start",
-    "ghd": "bun clean && bun i",
+    "reinstall:start": "bun clean:install && bun start",
     "start": "expo start",
     "start:c": "expo start -c",
+    "clean:setup": "bun clean:install && bun format && bun lint && bun type-check",
+    "clean:install": "bun clean && bun install",
     "clean": "rm -rf dist .expo .expo-shared node_modules yarn.lock package-lock.json bun.lock",
     "android": "expo start --android",
     "ios": "expo start --ios",

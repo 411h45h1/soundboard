@@ -15,25 +15,19 @@
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/7b28c2b7-8f37-47d2-8d32-c0f189205b39"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.ourends.soundboard",
       "supportsTablet": true,
       "backgroundColor": "#5E403F",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ],
+        "UIBackgroundModes": ["audio"],
         "NSMicrophoneUsageDescription": "This app requires access to the microphone to record audio.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "permissions": [
-        "RECORD_AUDIO"
-      ],
+      "permissions": ["RECORD_AUDIO"],
       "package": "com.notso_software.soundboard",
       "backgroundColor": "#5E403F",
       "adaptiveIcon": {
@@ -53,9 +47,6 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "plugins": [
-      "expo-font",
-      "expo-router"
-    ]
+    "plugins": ["expo-font", "expo-router"]
   }
 }
